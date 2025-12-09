@@ -148,13 +148,13 @@ export default function Income() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pl-[3.5rem]">
+              <div className="flex flex-col gap-4 w-full pl-0 sm:pl-[3.5rem] mt-4">
                 <AddEarningDialog trigger={
-                  <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20">
+                  <Button size="lg" className="w-full h-14 rounded-full text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20">
                     <Plus className="mr-2 h-5 w-5" /> Cadastrar Ganho
                   </Button>
                 } />
-                <Button variant="outline" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800">
+                <Button variant="outline" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="w-full h-14 rounded-full text-base font-bold border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800">
                   Gerenciar Salário
                 </Button>
               </div>
@@ -180,12 +180,12 @@ export default function Income() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pl-[3.5rem]">
-                <Button size="lg" onClick={() => setWizardOpen(true)} className="shadow-lg shadow-primary/20">
+              <div className="flex flex-col gap-4 w-full pl-0 sm:pl-[3.5rem] mt-4">
+                <Button size="lg" onClick={() => setWizardOpen(true)} className="w-full h-14 rounded-full text-base font-bold shadow-lg shadow-primary/20">
                   <Sparkles className="mr-2 h-5 w-5" /> Gerenciar Salário
                 </Button>
                 <AddEarningDialog trigger={
-                  <Button variant="outline" className="bg-white/50 border-primary/20 hover:bg-white hover:border-primary/40">
+                  <Button variant="outline" className="w-full h-14 rounded-full text-base font-bold bg-white/50 border-primary/20 hover:bg-white hover:border-primary/40">
                     Registrar Ganhos Variáveis
                   </Button>
                 } />
@@ -212,13 +212,17 @@ export default function Income() {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="w-full sm:w-auto h-12 px-8 text-base">
+            <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
+              <Button size="lg" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="w-full h-14 rounded-full text-base font-bold">
                 <Wallet className="mr-2 h-5 w-5" /> Registrar Salário Fixo
               </Button>
-              <span className="text-sm text-muted-foreground font-medium">OU</span>
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-muted-foreground/20"></div>
+                <span className="flex-shrink-0 mx-4 text-xs text-muted-foreground font-medium uppercase tracking-wider">ou</span>
+                <div className="flex-grow border-t border-muted-foreground/20"></div>
+              </div>
               <AddEarningDialog trigger={
-                <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 px-8 text-base border-emerald-500 text-emerald-600 hover:bg-emerald-50">
+                <Button size="lg" variant="outline" className="w-full h-14 rounded-full text-base font-bold border-emerald-500 text-emerald-600 hover:bg-emerald-50">
                   <TrendingUp className="mr-2 h-5 w-5" /> Cadastrar Ganhos Variáveis
                 </Button>
               } />

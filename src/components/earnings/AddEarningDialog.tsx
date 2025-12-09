@@ -8,7 +8,11 @@ import { useEarnings } from "@/hooks/useEarnings";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner"; // Assuming sonner is available or use-toast
 
-export function AddEarningDialog() {
+interface AddEarningDialogProps {
+    trigger?: React.ReactNode;
+}
+
+export function AddEarningDialog({ trigger }: AddEarningDialogProps) {
     const [open, setOpen] = useState(false);
     const [amount, setAmount] = useState("");
     const [description, setDescription] = useState("");
@@ -39,10 +43,12 @@ export function AddEarningDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg transform transition hover:scale-[1.02]">
-                    <Plus className="mr-2 h-5 w-5" />
-                    CADASTRAR GANHO
-                </Button>
+                {trigger ? trigger : (
+                    <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg transform transition hover:scale-[1.02]">
+                        <Plus className="mr-2 h-5 w-5" />
+                        CADASTRAR GANHO
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
