@@ -74,12 +74,18 @@ export function AIChatWidget() {
             // Helper to generate mock response based on keywords
             const getMockResponse = (input: string) => {
                 const lowerMsg = input.toLowerCase();
+                const greetings = ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'eai', 'fala pig'];
+
+                if (greetings.some(g => lowerMsg.includes(g))) {
+                    return "Olá! 🐷 Como posso ajudar com suas finanças hoje?";
+                }
+
                 if (lowerMsg.includes('geladeira') || lowerMsg.includes('comprar')) {
                     return "Oink! 🐷 Com base na sua projeção, **você pode sim**! \n\nSeu saldo em **Dezembro/2025** será de ~R$ 12.700. Uma geladeira de R$ 3.000 parcelada em 10x caberia com folga.";
                 } else if (lowerMsg.includes('mes') || lowerMsg.includes('mês') || lowerMsg.includes('dinheiro')) {
                     return "Seu melhor mês será **Janeiro de 2026** (saldo projetado: **R$ 13.300**). Oincrível! 🚀";
                 } else {
-                    return "Entendi! Estou analisando seus dados... Sua saúde financeira está nota 10! 🌟 Precisa de mais alguma dica do Consultor Pig?";
+                    return "Oink! 🐷 Estou com dificuldade para conectar com meu cérebro principal agora (provavelmente sobrecarga de tanta gente pedindo dicas!). \n\nTente novamente em alguns instantes.";
                 }
             };
 
