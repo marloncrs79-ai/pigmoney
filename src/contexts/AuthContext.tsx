@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [couple, setCouple] = useState<CoupleData | null>(null);
-  const [plan, setPlan] = useState<PlanType>('pro');
+  const [plan, setPlan] = useState<PlanType>('free');
   const [loading, setLoading] = useState(true);
   const [coupleLoading, setCoupleLoading] = useState(true);
 
