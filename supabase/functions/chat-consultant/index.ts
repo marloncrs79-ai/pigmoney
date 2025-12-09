@@ -257,7 +257,7 @@ serve(async (req) => {
 
         console.log('Initializing Gemini AI...');
         const genAI = new GoogleGenerativeAI(apiKey)
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
         // Prompt do sistema ATUALIZADO
         const systemPrompt = `
