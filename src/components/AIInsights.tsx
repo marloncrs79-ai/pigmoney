@@ -55,9 +55,26 @@ export function AIInsights({ scope, cardId }: AIInsightsProps) {
         }
       );
 
+      if (response.status === 429) {
+        throw new Error('O Consultor Pig está sobrecarregado no momento. Tente novamente em alguns segundos.');
+      }
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao gerar insights');
+        let errorMessage = 'Erro ao gerar insights';
+        try {
+          const errorData = await response.json();
+          // Try to extract a clean message if it's a JSON object
+          errorMessage = errorData.error || errorData.message || JSON.stringify(errorData);
+        } catch (e) {
+          // response was not json
+        }
+
+        // If message is too technical/long (like the Google generic one), fallback to simple
+        if (errorMessage.includes('GoogleGenerativeAI Error') || errorMessage.includes('429')) {
+          throw new Error('O Consultor Pig está descansando. Tente novamente em breve.');
+        }
+
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
