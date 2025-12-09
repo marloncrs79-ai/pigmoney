@@ -14,7 +14,11 @@ export function SetupCoupleDialog() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Show dialog only if user is logged in, not loading, and has no couple
-  const shouldShow = !!(user && !coupleLoading && !couple);
+  // Show dialog only if user is logged in, not loading, and has no couple
+  // AND not on landing page or auth page
+  const location = window.location.pathname;
+  const isPublicPage = location === '/' || location === '/auth';
+  const shouldShow = !!(user && !coupleLoading && !couple && !isPublicPage);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
