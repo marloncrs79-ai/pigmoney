@@ -17,9 +17,9 @@ import {
   LogOut,
   Menu,
   HelpCircle,
-  Sparkles,
   Settings,
-  Bot
+  Bot,
+  X
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -180,8 +180,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile Header */}
       <div className="fixed left-0 right-0 top-0 z-40 flex h-14 sm:h-16 items-center border-b border-border bg-card px-3 sm:px-4 lg:hidden shadow-duo">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          {/* Default Trigger Hidden but kept for semantic/structure if needed, or we can remove if FAB is the only way */}
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="-ml-1 rounded-2xl h-11 w-11">
+            <Button variant="ghost" size="icon" className="-ml-1 rounded-2xl h-11 w-11 lg:hidden opacity-0 pointer-events-none">
               <Menu className="h-7 w-7" />
             </Button>
           </SheetTrigger>
@@ -189,12 +190,37 @@ export function AppLayout({ children }: AppLayoutProps) {
             <NavContent />
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2 ml-2">
+        <div className="flex items-center gap-2 ml-2 absolute left-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
             <PiggyBank className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-display font-extrabold text-lg">PIGMONEY</span>
         </div>
+      </div>
+
+      {/* PREMIUM MOBILE FAB MENU */}
+      <div className="fixed bottom-24 right-6 z-[60] lg:hidden">
+        <Button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className={cn(
+            "h-[54px] w-[54px] rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-200 ease-out active:scale-90",
+            "bg-[#10B981] hover:bg-[#059669] text-white border-0", // Green official
+          )}
+          style={{
+            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)"
+          }}
+        >
+          <div className={cn(
+            "transition-all duration-300 transform",
+            mobileOpen ? "rotate-90 scale-100" : "rotate-0 scale-100"
+          )}>
+            {mobileOpen ? (
+              <X className="h-7 w-7 stroke-[2.5px]" />
+            ) : (
+              <Menu className="h-7 w-7 stroke-[2.5px]" />
+            )}
+          </div>
+        </Button>
       </div>
 
       {/* Main content */}
