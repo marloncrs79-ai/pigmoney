@@ -122,6 +122,12 @@ USING (auth.uid() = user_id);
 -- Adding created_by is safer for audit without breaking logic.
 ALTER TABLE public.income ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 ALTER TABLE public.fixed_expenses ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE public.credit_cards ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE public.card_transactions ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE public.piggy_banks ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE public.piggy_bank_movements ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE public.monthly_snapshots ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE public.ai_insights ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 
 
 -- 4. ENSURE NO PUBLIC ACCESS
