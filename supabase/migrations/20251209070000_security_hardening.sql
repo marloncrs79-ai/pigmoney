@@ -8,7 +8,7 @@ ALTER TABLE public.fixed_expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.income ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.credit_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.card_transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.variable_expenses ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.piggy_bank ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.piggy_bank_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.monthly_snapshots ENABLE ROW LEVEL SECURITY;
@@ -106,17 +106,7 @@ USING (
 
 -- (Repeat similar pattern for other couple-based tables if needed, but the pattern is established)
 -- To be safe, let's secure VARIABLE EXPENSES too (Old table)
-DROP POLICY IF EXISTS "Members can view variable expenses" ON public.variable_expenses;
-CREATE POLICY "Members can view variable expenses"
-ON public.variable_expenses FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.couple_members
-    WHERE couple_id = public.variable_expenses.couple_id
-    AND user_id = auth.uid()
-  )
-);
+
 
 -- EARNINGS (New User-Centric Table)
 -- Already verified in previous migration, but re-asserting
@@ -132,7 +122,7 @@ USING (auth.uid() = user_id);
 -- Adding created_by is safer for audit without breaking logic.
 ALTER TABLE public.income ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 ALTER TABLE public.fixed_expenses ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
-ALTER TABLE public.variable_expenses ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+
 
 -- 4. ENSURE NO PUBLIC ACCESS
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
