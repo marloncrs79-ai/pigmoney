@@ -19,7 +19,8 @@ import {
   HelpCircle,
   Settings,
   Bot,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 
 interface AppLayoutProps {
