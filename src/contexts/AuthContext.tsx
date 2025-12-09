@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,6 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [coupleLoading, setCoupleLoading] = useState(true);
 
+  // Prevent double-fetching
+  const fetchingRef = useRef(false);
+  const lastFetchedUserId = useRef<string | null>(null);
+
   // Load plan from local storage on mount
   useEffect(() => {
     const savedPlan = localStorage.getItem('pig_plan');
@@ -47,13 +51,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('pig_plan', newPlan);
   };
 
-  const fetchCouple = async (userId: string) => {
+  const fetchCouple = async (userId: string, force = false) => {
+    // Prevent concurrent fetches for the same user
     if (!userId) {
       setCoupleLoading(false);
       return;
     }
 
+    // Skip if already fetching or already fetched for this user (unless forced)
+    if (fetchingRef.current) {
+      console.log('[AuthContext] Skipping fetch - already in progress');
+      return;
+    }
+
+    if (!force && lastFetchedUserId.current === userId && couple !== null) {
+      console.log('[AuthContext] Skipping fetch - already fetched for this user');
+      setCoupleLoading(false);
+      return;
+    }
+
+    fetchingRef.current = true;
     setCoupleLoading(true);
+
+    console.log('[AuthContext] Fetching couple for user:', userId);
+
     try {
       const { data: memberData, error: memberError } = await supabase
         .from('couple_members')
@@ -61,30 +82,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (memberError) {
-        console.error('Error fetching member data:', memberError);
-      }
+      console.log('[AuthContext] Member query result:', { memberData, memberError });
 
-      if (memberData?.couple_id) {
+      if (memberError) {
+        console.error('[AuthContext] Error fetching member data:', memberError);
+        setCouple(null);
+      } else if (memberData?.couple_id) {
         const { data: coupleData, error: coupleError } = await supabase
           .from('couples')
           .select('id, name')
           .eq('id', memberData.couple_id)
           .single();
 
-        if (coupleError) {
-          console.error('Error fetching couple data:', coupleError);
-        }
+        console.log('[AuthContext] Couple query result:', { coupleData, coupleError });
 
-        if (coupleData) {
+        if (coupleError) {
+          console.error('[AuthContext] Error fetching couple data:', coupleError);
+          setCouple(null);
+        } else if (coupleData) {
           setCouple(coupleData);
+          lastFetchedUserId.current = userId;
         }
       } else {
+        console.log('[AuthContext] No membership found for user');
         setCouple(null);
       }
     } catch (err) {
-      console.error('Unexpected error in fetchCouple:', err);
+      console.error('[AuthContext] Unexpected error in fetchCouple:', err);
+      setCouple(null);
     } finally {
+      fetchingRef.current = false;
       setCoupleLoading(false);
     }
   };
@@ -92,69 +119,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const createCoupleForUser = async (coupleName: string) => {
     if (!user) return { error: new Error('Usuário não autenticado') };
 
+    console.log('[AuthContext] Creating couple:', coupleName);
     const { data, error } = await supabase.rpc('create_family_space', { name: coupleName });
 
-    if (error) return { error };
+    if (error) {
+      console.error('[AuthContext] Error creating couple:', error);
+      return { error };
+    }
 
+    console.log('[AuthContext] Couple created:', data);
     const newCouple = data as unknown as { id: string, name: string };
     setCouple({ id: newCouple.id, name: newCouple.name });
+    lastFetchedUserId.current = user.id;
     return { error: null };
   };
 
   const refreshCouple = async () => {
     if (user) {
-      await fetchCouple(user.id);
+      lastFetchedUserId.current = null; // Force refresh
+      await fetchCouple(user.id, true);
     }
   };
 
   useEffect(() => {
-    // 1. Set up the auth state change listener FIRST
+    let mounted = true;
+
+    // Only use onAuthStateChange - it fires immediately with current session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // Update React state synchronously
+      async (event, session) => {
+        if (!mounted) return;
+
+        console.log('[AuthContext] Auth state changed:', event, session?.user?.id);
+
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // IMPORTANT: Defer fetchCouple to next tick to avoid Supabase deadlock
-          // See: https://supabase.com/docs/reference/javascript/auth-onauthstatechange
+          // Use setTimeout to avoid Supabase internal deadlock
           setTimeout(() => {
-            fetchCouple(session.user.id);
-          }, 0);
+            if (mounted) {
+              fetchCouple(session.user.id);
+            }
+          }, 50); // Small delay to ensure RLS sees the data
+
+          // Admin override
+          if (session.user.email === 'marloncrs79@gmail.com') {
+            setPlan('pro');
+          }
         } else {
           setCouple(null);
           setCoupleLoading(false);
+          lastFetchedUserId.current = null;
         }
 
         setLoading(false);
-
-        // Admin override
-        if (session?.user?.email === 'marloncrs79@gmail.com') {
-          setPlan('pro');
-        }
       }
     );
 
-    // 2. THEN check for existing session (handles page refresh)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-        // Defer to next tick
-        setTimeout(() => {
-          fetchCouple(session.user.id);
-        }, 0);
-
-        if (session.user?.email === 'marloncrs79@gmail.com') {
-          setPlan('pro');
-        }
-      } else {
-        setCoupleLoading(false);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Monitor user changes to enforce admin rights
@@ -189,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const newCouple = data as unknown as { id: string, name: string };
       setCouple(newCouple);
+      lastFetchedUserId.current = authData.user.id;
     }
 
     return { error: null };
@@ -198,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setCouple(null);
     setPlan('free');
+    lastFetchedUserId.current = null;
     localStorage.removeItem('pig_plan');
   };
 
