@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AIInsights } from '@/components/AIInsights';
+
 import { useCreditCards, useCardTransactions, useCreateCardTransaction, useDeleteCardTransaction } from '@/hooks/useFinancialData';
 import { formatCurrency, formatMonthYear, getNext12Months, calculateInstallmentForMonth, EXPENSE_CATEGORIES } from '@/lib/utils';
 import { Plus, CreditCard, ArrowLeft, Trash2, TrendingUp } from 'lucide-react';
@@ -18,12 +18,12 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 export default function CardDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const { data: cards = [] } = useCreditCards();
   const { data: transactions = [], isLoading } = useCardTransactions(id);
   const createTransaction = useCreateCardTransaction();
   const deleteTransaction = useDeleteCardTransaction();
-  
+
   const card = cards.find(c => c.id === id);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -190,7 +190,7 @@ export default function CardDetail() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={invoiceProjection}>
                 <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px' }} />
                 <Bar dataKey="amount" fill="hsl(221, 83%, 53%)" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -249,9 +249,7 @@ export default function CardDetail() {
       </Card>
 
       {/* AI Insights for this card */}
-      <div className="mt-6">
-        <AIInsights scope="cards" cardId={id} />
-      </div>
+
     </AppLayout>
   );
 }

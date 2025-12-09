@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AIInsights } from '@/components/AIInsights';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMonthlyProjection, useFixedExpenses, useVariableExpenses, useCreditCards, useCardTransactions } from '@/hooks/useFinancialData';
 import { formatCurrency, formatMonthYear, getCurrentYearMonth, EXPENSE_CATEGORIES } from '@/lib/utils';
@@ -18,17 +18,17 @@ export default function Dashboard() {
   const { data: variableExpenses = [] } = useVariableExpenses();
   const { data: cards = [] } = useCreditCards();
   const { data: cardTransactions = [] } = useCardTransactions();
-  
+
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
-  
+
   const currentMonth = getCurrentYearMonth();
   const selectedProjection = projections[selectedMonthIndex];
   const nextProjection = projections[selectedMonthIndex + 1];
-  
+
   // Category breakdown for current month (fixed + variable)
   const currentMonthVariableExpenses = variableExpenses.filter(e => e.date && e.date.startsWith(currentMonth));
   const activeFixedExpenses = fixedExpenses.filter(e => e.is_active);
-  
+
   const categoryData = EXPENSE_CATEGORIES.map(cat => {
     const variableTotal = currentMonthVariableExpenses
       .filter(e => e.category === cat)
@@ -41,7 +41,7 @@ export default function Dashboard() {
       value: variableTotal + fixedTotal
     };
   }).filter(c => c.value > 0);
-  
+
   // Next 6 months chart data
   const chartData = projections.slice(0, 6).map(p => ({
     name: formatMonthYear(p.month).split(' ')[0].slice(0, 3),
@@ -121,7 +121,7 @@ export default function Dashboard() {
                   <AlertTriangle className={`h-6 w-6 sm:h-8 sm:w-8 ${selectedProjection?.status === 'danger' ? 'text-danger' : 'text-warning'}`} />
                 )}
               </div>
-              
+
               {nextProjection && (
                 <div className="flex items-center justify-between rounded-xl sm:rounded-2xl bg-muted/50 p-3 sm:p-4">
                   <div>
@@ -211,8 +211,8 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} width={50} />
-                <Tooltip 
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
+                <Tooltip
                   formatter={(value: number) => formatCurrency(value)}
                   contentStyle={{ borderRadius: '8px' }}
                 />
@@ -226,9 +226,7 @@ export default function Dashboard() {
       </Card>
 
       {/* AI Insights */}
-      <div className="mt-4 sm:mt-6">
-        <AIInsights scope="dashboard" />
-      </div>
+
     </AppLayout>
   );
 }

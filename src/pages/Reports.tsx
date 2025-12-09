@@ -1,7 +1,7 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AIInsights } from '@/components/AIInsights';
+
 import { useMonthlyProjection, useFixedExpenses, useVariableExpenses, useIncome, usePiggyBanks } from '@/hooks/useFinancialData';
 import { formatCurrency, formatMonthYear, getCurrentYearMonth, EXPENSE_CATEGORIES } from '@/lib/utils';
 import { BarChart3, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react';
@@ -92,7 +92,7 @@ export default function Reports() {
       {/* Projection Chart */}
       <Card className="mt-4 sm:mt-6"><CardHeader><CardTitle>Projeção dos Próximos Meses</CardTitle></CardHeader><CardContent><div className="h-52 sm:h-64 overflow-x-auto"><ResponsiveContainer width="100%" height="100%"><LineChart data={projections.map(p => ({ month: formatMonthYear(p.month).split(' ')[0].slice(0, 3), saldo: p.balance, receita: p.income, despesas: p.totalExpenses }))}><XAxis dataKey="month" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={45} /><Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px' }} /><Legend wrapperStyle={{ fontSize: '11px' }} /><Line type="monotone" dataKey="saldo" name="Saldo" stroke="hsl(221, 83%, 53%)" strokeWidth={2} dot={{ fill: 'hsl(221, 83%, 53%)' }} /><Line type="monotone" dataKey="receita" name="Receita" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ fill: 'hsl(142, 71%, 45%)' }} /><Line type="monotone" dataKey="despesas" name="Despesas" stroke="hsl(0, 84%, 60%)" strokeWidth={2} dot={{ fill: 'hsl(0, 84%, 60%)' }} /></LineChart></ResponsiveContainer></div></CardContent></Card>
 
-      <div className="mt-4 sm:mt-6"><AIInsights scope="reports" /></div>
+
     </AppLayout>
   );
 }

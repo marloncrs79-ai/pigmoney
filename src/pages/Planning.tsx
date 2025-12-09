@@ -1,7 +1,7 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AIInsights } from '@/components/AIInsights';
+
 import { useMonthlyProjection } from '@/hooks/useFinancialData';
 import { formatCurrency, formatMonthYear, cn } from '@/lib/utils';
 import { Calendar, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
@@ -134,8 +134,8 @@ export default function Planning() {
                     <span className="text-sm font-medium">Saldo</span>
                     <span className={cn(
                       'text-base sm:text-lg font-bold',
-                      projection.status === 'danger' ? 'text-danger' : 
-                      projection.status === 'warning' ? 'text-warning' : 'text-success'
+                      projection.status === 'danger' ? 'text-danger' :
+                        projection.status === 'warning' ? 'text-warning' : 'text-success'
                     )}>
                       {formatCurrency(projection.balance)}
                     </span>
@@ -148,9 +148,7 @@ export default function Planning() {
       </div>
 
       {/* AI Insights */}
-      <div className="mt-4 sm:mt-6">
-        <AIInsights scope="planning" />
-      </div>
+
     </AppLayout>
   );
 }
