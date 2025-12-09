@@ -1,7 +1,6 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1"
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1?target=deno"
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0?target=deno"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -199,27 +198,23 @@ serve(async (req) => {
 
     try {
         const authHeader = req.headers.get("Authorization");
-        if (!authHeader) {
-            throw new Error('No authorization header');
-        }
+        if (!authHeader) throw new Error('No authorization header');
 
-        const { message } = await req.json()
+        const { message } = await req.json().catch(() => ({ message: null }));
+        if (!message) throw new Error('Message is required');
+
         const apiKey = Deno.env.get('GEMINI_API_KEY')
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!
         const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!
 
-        if (!apiKey) {
-            console.error("GEMINI_API_KEY is not set")
-            throw new Error('API Key not configured')
-        }
+        if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
 
         const supabase = createClient(supabaseUrl, supabaseAnonKey, {
             global: { headers: { Authorization: authHeader } },
         });
 
-        // Get User & Context
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('User not found');
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) throw new Error('Autenticação falhou');
 
         const { data: membership } = await supabase
             .from('couple_members')
@@ -229,17 +224,19 @@ serve(async (req) => {
 
         let financialContext = {};
         if (membership) {
-            financialContext = await buildFinancialContext(supabase, membership.couple_id);
+            try {
+                financialContext = await buildFinancialContext(supabase, membership.couple_id);
+            } catch (err) {
+                console.error('Error building financial context:', err);
+                // Continue with empty context but log error
+                financialContext = { error: "Failed to load financial data" };
+            }
         }
 
         const genAI = new GoogleGenerativeAI(apiKey)
         // Use gemini-1.5-flash which is stable and fast
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
-        // Validar input
-        if (!message) {
-            throw new Error('Message is required')
-        }
 
         // Prompt do sistema ATUALIZADO
         const systemPrompt = `
