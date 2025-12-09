@@ -1,32 +1,118 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1?target=deno"
 
-// Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-console.log("Hello from Functions!")
+// Admin verification (shared with other admin functions)
+async function verifyAdmin(authHeader: string | null, supabaseUrl: string, serviceKey: string) {
+  if (!authHeader) throw new Error('No authorization header');
 
-Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
+  const supabase = createClient(supabaseUrl, serviceKey);
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) throw new Error('Authentication failed');
+
+  const isAdmin = user.user_metadata?.is_admin === true || user.app_metadata?.is_admin === true;
+  if (!isAdmin) throw new Error('Forbidden: Admin access required');
+
+  return { user, supabase };
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const authHeader = req.headers.get('Authorization');
+
+    const { supabase } = await verifyAdmin(authHeader, supabaseUrl, serviceKey);
+
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      const range = url.searchParams.get('range') || '7'; // days
+
+      // Get total users
+      const { data: allUsers } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+
+      const totalUsers = allUsers?.users.length || 0;
+
+      // Calculate active users (last login within range)
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - parseInt(range));
+
+      const activeUsers = allUsers?.users.filter((u: any) =>
+        u.last_sign_in_at && new Date(u.last_sign_in_at) > cutoffDate
+      ).length || 0;
+
+      // Calculate new users in range
+      const newUsers = allUsers?.users.filter((u: any) =>
+        u.created_at && new Date(u.created_at) > cutoffDate
+      ).length || 0;
+
+      // Provider distribution
+      const providerCounts: Record<string, number> = {};
+      allUsers?.users.forEach((u: any) => {
+        const provider = u.app_metadata?.provider || 'email';
+        providerCounts[provider] = (providerCounts[provider] || 0) + 1;
+      });
+
+      // Verified email percentage
+      const verifiedCount = allUsers?.users.filter((u: any) => u.email_confirmed_at).length || 0;
+      const verifiedPercentage = totalUsers > 0 ? (verifiedCount / totalUsers) * 100 : 0;
+
+      // Growth by day (last 30 days)
+      const dailyGrowth: { date: string; count: number }[] = [];
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+
+        const count = allUsers?.users.filter((u: any) => {
+          const createdDate = new Date(u.created_at).toISOString().split('T')[0];
+          return createdDate === dateStr;
+        }).length || 0;
+
+        dailyGrowth.push({ date: dateStr, count });
+      }
+
+      return new Response(
+        JSON.stringify({
+          total_users: totalUsers,
+          active_users: activeUsers,
+          new_users: newUsers,
+          verified_percentage: verifiedPercentage.toFixed(2),
+          provider_distribution: providerCounts,
+          daily_growth: dailyGrowth,
+          range_days: parseInt(range),
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    throw new Error('Method not allowed');
+
+  } catch (error) {
+    console.error('Admin Metrics Error:', error);
+
+    const status = error.message.includes('Forbidden') ? 403 :
+      error.message.includes('Authentication') ? 401 : 400;
+
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
 })
-
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/admin-metrics' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
-
-*/
