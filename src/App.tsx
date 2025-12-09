@@ -28,6 +28,13 @@ const Guide = lazy(() => import("./pages/Guide"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Plans = lazy(() => import("./pages/Plans"));
 
+// Admin pages lazy
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminUserDetail = lazy(() => import("./pages/admin/UserDetail"));
+const AdminMetrics = lazy(() => import("./pages/admin/Metrics"));
+const AdminLogs = lazy(() => import("./pages/admin/Logs"));
+
 // Public pages lazy
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -101,6 +108,11 @@ function AppRoutes() {
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+          <Route path="/admin/metrics" element={<AdminMetrics />} />
+          <Route path="/admin/logs" element={<AdminLogs />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
