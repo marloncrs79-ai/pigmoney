@@ -95,14 +95,16 @@ export default function Income() {
   const getRange = () => {
     switch (filter) {
       case 'day': return { start: format(date, "yyyy-MM-dd'T'00:00:00"), end: format(date, "yyyy-MM-dd'T'23:59:59") };
-      case 'week':
+      case 'week': {
         const weekStart = startOfWeek(date, { weekStartsOn: 1 });
         const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
         return { start: weekStart.toISOString(), end: weekEnd.toISOString() };
-      case 'month':
+      }
+      case 'month': {
         const monthStart = startOfMonth(date);
         const monthEnd = endOfMonth(date);
         return { start: monthStart.toISOString(), end: monthEnd.toISOString() };
+      }
       default: return { start: new Date().toISOString(), end: new Date().toISOString() };
     }
   };
