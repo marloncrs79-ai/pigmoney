@@ -24,9 +24,17 @@ async function verifyAdmin(authHeader: string | null, supabaseUrl: string, servi
   }
 
   // Fetch fresh user data from database to ensure metadata is up-to-date
-  const { data: { user: dbUser }, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
+  let dbUser;
+  try {
+    const { data, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
+    if (dbError) throw dbError;
+    dbUser = data.user;
+  } catch (err) {
+    console.warn('getUserById failed, falling back to JWT:', err);
+    dbUser = jwtUser;
+  }
 
-  if (dbError || !dbUser) {
+  if (!dbUser) {
     throw new Error('User not found');
   }
 

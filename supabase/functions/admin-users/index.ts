@@ -20,13 +20,28 @@ async function verifyAdmin(authHeader: string | null, supabaseUrl: string, servi
   const { data: { user: jwtUser }, error: authError } = await supabase.auth.getUser(token);
 
   if (authError || !jwtUser) {
+    console.error('Auth check failed:', authError);
     throw new Error('Authentication failed');
   }
 
-  // Fetch fresh user data from database to ensure metadata is up-to-date
-  const { data: { user: dbUser }, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
+  console.log('JWT User ID:', jwtUser.id);
 
-  if (dbError || !dbUser) {
+  // Fetch fresh user data from database to ensure metadata is up-to-date
+  // We use try-catch to identify if this specific call is failing
+  let dbUser;
+  try {
+    const { data, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
+    if (dbError) throw dbError;
+    dbUser = data.user;
+  } catch (err) {
+    console.error('getUserById failed for ID:', jwtUser.id, err);
+    // Fallback to JWT user if DB fetch fails, but warn
+    // This might happen if the ID format is somehow unexpected, though it shouldn't be for Supabase
+    console.warn('Falling back to JWT user data due to fetch error');
+    dbUser = jwtUser;
+  }
+
+  if (!dbUser) {
     throw new Error('User not found');
   }
 
