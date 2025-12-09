@@ -126,66 +126,107 @@ export default function Income() {
     <AppLayout>
       <PageHeader
         title="Receitas"
-        description={mode === 'variable' ? "Gestão de Renda Variável Inteligente" : "Gestão Salarial e Renda Fixa"}
+        description="Gestão Inteligente de Ganhos"
         learnMoreSection="receitas"
-        action={
-          <div className="flex gap-2">
-            {mode !== 'fixed' && (
-              <Button variant="outline" size="sm" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="hidden sm:flex">
-                Gerenciar Salário
-              </Button>
-            )}
-            {mode === 'variable' ? <AddEarningDialog /> : null}
-          </div>
-        }
       />
 
-      {/* Persistent Mobile/Desktop Switcher / Manager */}
-      <div className="absolute top-20 right-4 sm:top-24 sm:right-8 lg:hidden">
-        {mode !== 'fixed' && (
-          <Button variant="ghost" size="sm" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="text-xs text-muted-foreground">
-            Gerenciar Salário
-          </Button>
+      {/* --- ADAPTIVE HEADER & ACTIONS --- */}
+      <div className="mb-8 space-y-6">
+
+        {/* Mode: Variable Income */}
+        {mode === 'variable' && (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
+            <div className="relative z-10 flex flex-col gap-4">
+              <div className="flex gap-4 items-start">
+                <div className="text-4xl shrink-0">🐷</div>
+                <div className="space-y-1">
+                  <h3 className="font-bold text-emerald-800 text-lg">Você não tem salário fixo? Sem problema!</h3>
+                  <p className="text-emerald-700 leading-relaxed">
+                    Use o botão <strong>Cadastrar Ganho</strong> sempre que receber alguma grana — diária, entrega, freela ou corrida.<br />
+                    O PigMoney faz toda a mágica por você.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pl-[3.5rem]">
+                <AddEarningDialog trigger={
+                  <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20">
+                    <Plus className="mr-2 h-5 w-5" /> Cadastrar Ganho
+                  </Button>
+                } />
+                <Button variant="outline" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800">
+                  Gerenciar Salário
+                </Button>
+              </div>
+            </div>
+            {/* Decorative */}
+            <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
+              <TrendingUp className="h-48 w-48 text-emerald-600" />
+            </div>
+          </div>
         )}
+
+        {/* Mode: Fixed Salary */}
+        {mode === 'fixed' && (
+          <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 relative overflow-hidden">
+            <div className="relative z-10 flex flex-col gap-4">
+              <div className="flex gap-4 items-start">
+                <div className="text-4xl shrink-0">🐷</div>
+                <div className="space-y-1">
+                  <h3 className="font-bold text-primary text-lg">Você recebe salário fixo? Maravilha!</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Configure tudo aqui para acompanhar seu mês direitinho.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pl-[3.5rem]">
+                <Button size="lg" onClick={() => setWizardOpen(true)} className="shadow-lg shadow-primary/20">
+                  <Sparkles className="mr-2 h-5 w-5" /> Gerenciar Salário
+                </Button>
+                <AddEarningDialog trigger={
+                  <Button variant="outline" className="bg-white/50 border-primary/20 hover:bg-white hover:border-primary/40">
+                    Registrar Ganhos Variáveis
+                  </Button>
+                } />
+              </div>
+            </div>
+            {/* Decorative */}
+            <div className="absolute -right-6 -bottom-6 opacity-5 pointer-events-none">
+              <Wallet className="h-48 w-48" />
+            </div>
+          </div>
+        )}
+
+        {/* Mode: Empty / First Access */}
+        {mode === 'empty' && (
+          <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-2xl p-8 text-center space-y-6">
+            <div className="text-6xl mb-4">🐷</div>
+            <div className="space-y-2 max-w-lg mx-auto">
+              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                Bem-vindo ao seu cofre digital!
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Você recebe salário fixo ou ganha por dia/semana? <br />
+                Escolha uma opção para começar.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button size="lg" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="w-full sm:w-auto h-12 px-8 text-base">
+                <Wallet className="mr-2 h-5 w-5" /> Registrar Salário Fixo
+              </Button>
+              <span className="text-sm text-muted-foreground font-medium">OU</span>
+              <AddEarningDialog trigger={
+                <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 px-8 text-base border-emerald-500 text-emerald-600 hover:bg-emerald-50">
+                  <TrendingUp className="mr-2 h-5 w-5" /> Cadastrar Ganhos Variáveis
+                </Button>
+              } />
+            </div>
+          </div>
+        )}
+
       </div>
-
-      {/* --- EMPTY STATE --- */}
-      {mode === 'empty' && (
-        <div className="space-y-6 mt-8">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold">Como você recebe?</h2>
-            <p className="text-muted-foreground">Escolha a melhor forma de organizar seus ganhos no PigMoney.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-2 border-dashed hover:border-emerald-500 transition-colors cursor-pointer group" onClick={() => setMode('variable')}>
-              <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
-                <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <TrendingUp className="h-8 w-8 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">Renda Variável / Freelancer</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Para quem não tem dia fixo pra receber. Registre ganhos soltos, acompanhe médias e metas.</p>
-                </div>
-                <Button variant="outline" className="w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50">Começar com Renda Variável</Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-dashed hover:border-primary transition-colors cursor-pointer group" onClick={() => { setMode('fixed'); setWizardOpen(true); }}>
-              <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Wallet className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">Salário Fixo / CLT</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Para quem recebe todo mês. Configure salário base, descontos, benefícios e eventos.</p>
-                </div>
-                <Button variant="outline" className="w-full">Configurar Salário</Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
 
       {/* --- VARIABLE INCOME MODE --- */}
       {mode === 'variable' && (
@@ -296,12 +337,6 @@ export default function Income() {
               )}
             </CardContent>
           </Card>
-
-          <div className="text-center pt-4">
-            <Button variant="ghost" size="sm" onClick={() => { setMode('fixed'); setWizardOpen(true); }} className="text-xs text-muted-foreground hover:text-primary">
-              Tem salário fixo? Configure aqui
-            </Button>
-          </div>
         </div>
       )}
 
@@ -364,12 +399,6 @@ export default function Income() {
               </div>
             </CardContent>
           </Card>
-
-          <div className="text-center pt-4">
-            <Button variant="ghost" size="sm" onClick={() => setMode('variable')} className="text-xs text-muted-foreground hover:text-emerald-600">
-              Possui ganhos variáveis? Comece a registrar
-            </Button>
-          </div>
         </div>
       )}
 
