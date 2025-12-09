@@ -32,7 +32,7 @@ serve(async (req) => {
         // Initialize Admin Client for DB operations (Bypass RLS)
         const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+            Deno.env.get('SERVICE_ROLE_KEY') ?? ''
         );
 
         // Validate user is authenticated with context client
