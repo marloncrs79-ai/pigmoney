@@ -11,6 +11,8 @@ create table if not exists public.cancellation_feedback (
 alter table public.cancellation_feedback enable row level security;
 
 -- Policy: Authenticated users can insert their own feedback
+-- Policy: Authenticated users can insert their own feedback
+drop policy if exists "Users can insert their own cancellation feedback" on public.cancellation_feedback;
 create policy "Users can insert their own cancellation feedback"
     on public.cancellation_feedback
     for insert
@@ -18,6 +20,7 @@ create policy "Users can insert their own cancellation feedback"
     with check (auth.uid() = user_id);
 
 -- Policy: Users can view their own feedback (optional, but good for completeness)
+drop policy if exists "Users can view their own feedback" on public.cancellation_feedback;
 create policy "Users can view their own feedback"
     on public.cancellation_feedback
     for select
