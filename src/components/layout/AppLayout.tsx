@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { getUserPlanLabel } from '@/lib/plan-utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,7 +21,7 @@ import {
   Settings,
   Bot,
   X,
-  Sparkles
+  User
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -71,7 +72,7 @@ const navGroups = [
 export function AppLayout({ children }: AppLayoutProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { couple, signOut } = useAuth();
+  const { couple, signOut, plan } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -100,13 +101,19 @@ export function AppLayout({ children }: AppLayoutProps) {
             {couple ? (
               <>
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Sparkles className="h-3 w-3 text-emerald-500 fill-emerald-500" />
-                  <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">Conta Premium</p>
+                  <User className="h-3 w-3 text-primary" />
+                  <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">{getUserPlanLabel(plan)}</p>
                 </div>
                 <p className="font-bold text-sidebar-foreground truncate text-sm">{couple.name}</p>
               </>
             ) : (
-              <p className="font-bold text-sidebar-foreground text-sm">Minha Conta</p>
+              <>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <User className="h-3 w-3 text-muted-foreground" />
+                  <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">{getUserPlanLabel(plan)}</p>
+                </div>
+                <p className="font-bold text-sidebar-foreground text-sm">Minha Conta</p>
+              </>
             )}
           </div>
           <div className="flex gap-1">

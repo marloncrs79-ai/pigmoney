@@ -1,392 +1,396 @@
 import { AppLayout } from '@/components/layout/AppLayout';
-import { PageHeader } from '@/components/ui/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { 
-  Wallet, Receipt, CreditCard, PiggyBank, LayoutDashboard, Calendar, 
-  Lightbulb, ArrowRight, CheckCircle2, HelpCircle 
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  Wallet, Receipt, CreditCard, PiggyBank, LayoutDashboard, Calendar,
+  Lightbulb, ArrowRight, CheckCircle2, TrendingUp, Sparkles,
+  DollarSign, Target, BarChart3, Shield, Zap, ChevronRight,
+  Clock, Users, Mail, Lock, Star, Rocket, BookOpen
 } from 'lucide-react';
 
+// Feature sections data
+const features = [
+  {
+    id: 'dashboard',
+    icon: LayoutDashboard,
+    title: 'Dashboard',
+    subtitle: 'Seu painel de controle financeiro',
+    color: 'from-emerald-500 to-teal-600',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/20',
+    textColor: 'text-emerald-600',
+    description: 'Visão geral de toda sua vida financeira em um único lugar.',
+    features: [
+      'Receita mensal total',
+      'Despesas fixas acumuladas',
+      'Fatura do mês nos cartões',
+      'Saldo em cofrinhos',
+      'Projeção de 6 meses',
+      'Onde o dinheiro está indo (gráfico)'
+    ]
+  },
+  {
+    id: 'salary',
+    icon: Wallet,
+    title: 'Salário & Ganhos',
+    subtitle: 'Configure sua renda completa',
+    color: 'from-blue-500 to-indigo-600',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/20',
+    textColor: 'text-blue-600',
+    isNew: true,
+    description: 'Cadastre seu salário com todos os detalhes que fazem diferença.',
+    features: [
+      'Salário base mensal',
+      'Adicionais fixos (insalubridade, gratificação, VA)',
+      'Penduricalhos sazonais (fardamento, férias)',
+      'Descontos em folha (consignado)',
+      'Cálculo automático por mês'
+    ]
+  },
+  {
+    id: 'earnings',
+    icon: TrendingUp,
+    title: 'Renda Variável Inteligente',
+    subtitle: 'Para quem tem ganhos extras',
+    color: 'from-violet-500 to-purple-600',
+    bgColor: 'bg-violet-500/10',
+    borderColor: 'border-violet-500/20',
+    textColor: 'text-violet-600',
+    isNew: true,
+    description: 'Registre ganhos de freelance, vendas, bicos e muito mais.',
+    features: [
+      'Cadastro de ganhos por tipo',
+      'Histórico filtrado por Dia/Semana/Mês',
+      'Projeção mensal automática',
+      'Integração com Dashboard',
+      'Acompanhe tendências de renda'
+    ]
+  },
+  {
+    id: 'expenses',
+    icon: Receipt,
+    title: 'Despesas',
+    subtitle: 'Fixas e variáveis organizadas',
+    color: 'from-rose-500 to-red-600',
+    bgColor: 'bg-rose-500/10',
+    borderColor: 'border-rose-500/20',
+    textColor: 'text-rose-600',
+    description: 'Controle todos os seus gastos com categorização inteligente.',
+    features: [
+      'Despesas fixas recorrentes',
+      'Despesas variáveis do dia a dia',
+      'Categorias personalizadas',
+      'Vinculação com cartões',
+      'Parcelamentos automáticos'
+    ]
+  },
+  {
+    id: 'cards',
+    icon: CreditCard,
+    title: 'Cartões de Crédito',
+    subtitle: 'Faturas sob controle',
+    color: 'from-amber-500 to-orange-600',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
+    textColor: 'text-amber-600',
+    description: 'Gerencie múltiplos cartões e nunca mais se perca nas faturas.',
+    features: [
+      'Múltiplos cartões',
+      'Fatura atual e próximas',
+      'Limite disponível',
+      'Fechamento e vencimento',
+      'Parcelas futuras projetadas'
+    ]
+  },
+  {
+    id: 'piggybank',
+    icon: PiggyBank,
+    title: 'Cofrinhos',
+    subtitle: 'Suas metas de economia',
+    color: 'from-pink-500 to-rose-600',
+    bgColor: 'bg-pink-500/10',
+    borderColor: 'border-pink-500/20',
+    textColor: 'text-pink-600',
+    description: 'Separe dinheiro para objetivos específicos e acompanhe o progresso.',
+    features: [
+      'Múltiplos cofrinhos',
+      'Meta opcional por cofrinho',
+      'Depósitos e retiradas',
+      'Histórico de movimentações',
+      'Progresso visual'
+    ]
+  },
+  {
+    id: 'planning',
+    icon: Calendar,
+    title: 'Planejamento',
+    subtitle: 'Visão de 12 meses',
+    color: 'from-cyan-500 to-blue-600',
+    bgColor: 'bg-cyan-500/10',
+    borderColor: 'border-cyan-500/20',
+    textColor: 'text-cyan-600',
+    description: 'Veja como sua vida financeira vai evoluir nos próximos meses.',
+    features: [
+      'Projeção automática de 12 meses',
+      'Identifica meses críticos',
+      'Considera sazonalidade',
+      'Prevê término de parcelas',
+      'Ajuda a se preparar'
+    ]
+  },
+  {
+    id: 'reports',
+    icon: BarChart3,
+    title: 'Relatórios',
+    subtitle: 'Análise visual dos dados',
+    color: 'from-teal-500 to-emerald-600',
+    bgColor: 'bg-teal-500/10',
+    borderColor: 'border-teal-500/20',
+    textColor: 'text-teal-600',
+    description: 'Gráficos e métricas para entender seus padrões financeiros.',
+    features: [
+      'Gastos por categoria',
+      'Evolução mensal',
+      'Comparativo de períodos',
+      'Tendências de gastos',
+      'Exportação de dados'
+    ]
+  }
+];
+
+const quickStartSteps = [
+  { step: 1, title: 'Cadastre seu salário', icon: Wallet, description: 'Configure sua renda principal com todos os adicionais' },
+  { step: 2, title: 'Adicione despesas fixas', icon: Receipt, description: 'Cadastre contas que se repetem todo mês' },
+  { step: 3, title: 'Cadastre seus cartões', icon: CreditCard, description: 'Informe limite, fechamento e vencimento' },
+  { step: 4, title: 'Registre gastos do mês', icon: DollarSign, description: 'Durante 30 dias, registre despesas variáveis' },
+  { step: 5, title: 'Crie um cofrinho', icon: PiggyBank, description: 'Defina uma meta e comece a guardar' },
+];
+
 export default function Help() {
+  const [activeFeature, setActiveFeature] = useState(features[0].id);
+
+  const currentFeature = features.find(f => f.id === activeFeature) || features[0];
+
   return (
     <AppLayout>
-      <PageHeader
-        title="Guia do PIGMONEY"
-        description="Entenda tudo sobre o sistema, mesmo que você odeie planilhas"
-      />
+      {/* Hero Section */}
+      <div className="relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-emerald-600 p-8 text-white">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTZzLTItNC0yLTYgMi00IDItNi0yLTQtMi02bTAgMjRjMC0yIDItNCAyLTZzLTItNC0yLTYgMi00IDItNi0yLTQtMi02Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <BookOpen className="h-6 w-6" />
+            <span className="text-sm font-medium opacity-90">Central de Ajuda</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">
+            Guia do PIGMONEY
+          </h1>
+          <p className="text-lg opacity-90 max-w-xl">
+            Aprenda a usar todas as funcionalidades e domine suas finanças em poucos minutos.
+          </p>
+        </div>
+        <Sparkles className="absolute bottom-4 right-4 h-24 w-24 opacity-10" />
+      </div>
 
-      {/* Intro */}
-      <Card className="mb-6 bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-4">
-            <div className="rounded-full bg-primary/20 p-3">
-              <HelpCircle className="h-6 w-6 text-primary" />
+      {/* What's New Banner */}
+      <Card className="mb-8 border-violet-200 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20">
+        <CardContent className="py-5">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-500/20">
+                <Rocket className="h-6 w-6 text-violet-600" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-violet-900 dark:text-violet-100">Novidades</h3>
+                  <Badge variant="secondary" className="bg-violet-500 text-white hover:bg-violet-600">NEW</Badge>
+                </div>
+                <p className="text-sm text-violet-700 dark:text-violet-300">Confira as últimas atualizações</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold mb-2">O que é o PIGMONEY?</h2>
-              <p className="text-muted-foreground mb-4">
-                O PIGMONEY é um sistema simples que te ajuda a responder três perguntas:
-              </p>
-              <ol className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success/20 text-success text-xs font-bold">1</span>
-                  <span><strong>Quanto entra todo mês?</strong> (salário, extras, rendas)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-warning/20 text-warning text-xs font-bold">2</span>
-                  <span><strong>Para onde o dinheiro está indo?</strong> (contas, cartão, gastos do dia a dia)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">3</span>
-                  <span><strong>O que vai acontecer nos próximos meses?</strong> (previsão)</span>
-                </li>
-              </ol>
+            <div className="flex flex-wrap gap-2 md:ml-auto">
+              <Badge variant="outline" className="border-violet-300 text-violet-700">Renda Variável</Badge>
+              <Badge variant="outline" className="border-violet-300 text-violet-700">Salário Inteligente</Badge>
+              <Badge variant="outline" className="border-violet-300 text-violet-700">Login com E-mail</Badge>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Concepts */}
-      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-        <Lightbulb className="h-5 w-5 text-warning" />
-        Conceitos Básicos
+      {/* Features Grid */}
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <Zap className="h-5 w-5 text-primary" />
+        Funcionalidades do PigMoney
       </h2>
-      
-      <div className="grid gap-4 md:grid-cols-2 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Wallet className="h-5 w-5 text-success" />
-              O que é RECEITA?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p className="mb-3"><strong>Receita = dinheiro que entra.</strong></p>
-            <p className="mb-2">Exemplos:</p>
-            <ul className="list-disc list-inside space-y-1 mb-3">
-              <li>Salário</li>
-              <li>Hora extra, bônus, comissão</li>
-              <li>Renda extra (freela, venda de algo)</li>
-              <li>Aluguel que você recebe</li>
-            </ul>
-            <p>No sistema, você cadastra seu <strong>salário base</strong>, extras fixos, penduricalhos sazonais e descontos em folha (como consignado).</p>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Receipt className="h-5 w-5 text-danger" />
-              O que é DESPESA FIXA?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p className="mb-3"><strong>Despesa fixa = conta que se repete todo mês.</strong></p>
-            <p className="mb-2">Exemplos:</p>
-            <ul className="list-disc list-inside space-y-1 mb-3">
-              <li>Aluguel, condomínio</li>
-              <li>Escola/creche</li>
-              <li>Internet, plano de saúde</li>
-              <li>Assinaturas (Netflix, Spotify)</li>
-              <li>Parcela de empréstimo</li>
-            </ul>
-            <p>São despesas que "comem" sua renda todo mês, queira você ou não.</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-3 mb-10">
+        {/* Feature Selector (Left) */}
+        <div className="lg:col-span-1 space-y-2">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            const isActive = activeFeature === feature.id;
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Receipt className="h-5 w-5 text-warning" />
-              O que é DESPESA VARIÁVEL?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p className="mb-3"><strong>Despesa variável = gasto que varia mês a mês.</strong></p>
-            <p className="mb-2">Exemplos:</p>
-            <ul className="list-disc list-inside space-y-1 mb-3">
-              <li>Mercado</li>
-              <li>iFood / lanches / restaurantes</li>
-              <li>Gasolina, farmácia</li>
-              <li>Lazer (cinema, passeio)</li>
-              <li>Roupas, presentes</li>
-            </ul>
-            <p>Registre por categoria para entender <strong>para onde o dinheiro está escorrendo</strong>.</p>
-          </CardContent>
-        </Card>
+            return (
+              <button
+                key={feature.id}
+                onClick={() => setActiveFeature(feature.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200",
+                  isActive
+                    ? `${feature.bgColor} ${feature.borderColor} border-2 shadow-sm`
+                    : "hover:bg-muted/50 border-2 border-transparent"
+                )}
+              >
+                <div className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                  isActive ? `bg-gradient-to-br ${feature.color} text-white` : "bg-muted"
+                )}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("font-medium truncate", isActive && feature.textColor)}>
+                      {feature.title}
+                    </span>
+                    {feature.isNew && (
+                      <Badge className="bg-violet-500 hover:bg-violet-600 text-[10px] px-1.5 py-0">NEW</Badge>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground line-clamp-1">{feature.subtitle}</span>
+                </div>
+                <ChevronRight className={cn(
+                  "h-4 w-4 shrink-0 transition-transform",
+                  isActive ? `${feature.textColor}` : "text-muted-foreground",
+                  isActive && "translate-x-1"
+                )} />
+              </button>
+            );
+          })}
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CreditCard className="h-5 w-5 text-primary" />
-              Como funciona o CARTÃO?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p className="mb-3">Cadastre seus cartões com limite, dia de fechamento e vencimento.</p>
-            <p className="mb-2">Quando marcar uma despesa como "paga no cartão":</p>
-            <ul className="list-disc list-inside space-y-1 mb-3">
-              <li>O sistema decide se entra na fatura atual ou na próxima</li>
-              <li>Soma parcelamentos automaticamente</li>
-              <li>Projeta o impacto nas próximas faturas</li>
-            </ul>
-          </CardContent>
-        </Card>
+        {/* Feature Detail (Right) */}
+        <div className="lg:col-span-2">
+          <Card className={cn("h-full", currentFeature.borderColor, "border-2")}>
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4 mb-6">
+                <div className={cn(
+                  "flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br",
+                  currentFeature.color
+                )}>
+                  <currentFeature.icon className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-bold">{currentFeature.title}</h3>
+                    {currentFeature.isNew && (
+                      <Badge className="bg-violet-500 hover:bg-violet-600">NOVO</Badge>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground">{currentFeature.description}</p>
+                </div>
+              </div>
 
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <PiggyBank className="h-5 w-5 text-success" />
-              O que é COFRINHO?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p className="mb-3"><strong>Cofrinho = lugar onde você guarda dinheiro para um objetivo específico.</strong></p>
-            <p className="mb-2">Você pode ter vários cofrinhos:</p>
-            <div className="grid gap-2 sm:grid-cols-3 mb-3">
-              <div className="rounded-lg bg-muted/50 px-3 py-2">"Reserva de emergência"</div>
-              <div className="rounded-lg bg-muted/50 px-3 py-2">"Viagem"</div>
-              <div className="rounded-lg bg-muted/50 px-3 py-2">"Reforma da casa"</div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {currentFeature.features.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <CheckCircle2 className={cn("h-4 w-4 shrink-0", currentFeature.textColor)} />
+                    <span className="text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Quick Start Section */}
+      <div className="mb-10">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Rocket className="h-5 w-5 text-primary" />
+          Como Começar (5 Passos)
+        </h2>
+
+        <div className="grid gap-4 md:grid-cols-5">
+          {quickStartSteps.map((step, idx) => {
+            const Icon = step.icon;
+            return (
+              <Card key={idx} className="group hover:shadow-md transition-shadow">
+                <CardContent className="pt-6 text-center">
+                  <div className="relative mx-auto mb-4">
+                    <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <Icon className="h-7 w-7 text-primary" />
+                    </div>
+                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white text-xs font-bold">
+                      {step.step}
+                    </span>
+                  </div>
+                  <h4 className="font-semibold text-sm mb-1">{step.title}</h4>
+                  <p className="text-xs text-muted-foreground">{step.description}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Security & Auth Section */}
+      <div className="grid gap-6 md:grid-cols-2 mb-10">
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20">
+                <Lock className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Login Seguro</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Acesse com e-mail + senha. Confirmação por e-mail garante a segurança da sua conta.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="border-blue-300">
+                    <Mail className="h-3 w-3 mr-1" />
+                    E-mail + Senha
+                  </Badge>
+                  <Badge variant="outline" className="border-blue-300">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Criptografia
+                  </Badge>
+                </div>
+              </div>
             </div>
-            <p>Cada cofrinho tem nome, saldo atual e meta opcional. Registre depósitos e retiradas para acompanhar a evolução.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent dark:from-amber-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/20">
+                <Lightbulb className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Assistente IA</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  A IA analisa seus dados e oferece insights personalizados sobre seus hábitos financeiros.
+                </p>
+                <div className="space-y-1.5 text-xs text-muted-foreground italic">
+                  <p>"Seus gastos com lazer subiram 40% este mês"</p>
+                  <p>"Seu consignado termina em setembro"</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* How to use */}
-      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-        <ArrowRight className="h-5 w-5 text-primary" />
-        Como Usar Cada Parte
-      </h2>
-
-      <Accordion type="single" collapsible className="mb-8">
-        <AccordionItem value="receitas">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-success" />
-              1. Cadastrar Receitas
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Vá na tela de <strong>Receitas</strong></li>
-              <li>Cadastre seu <strong>salário base</strong></li>
-              <li>Informe se ele tem:
-                <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                  <li>Adicionais fixos (insalubridade, gratificação, VA)</li>
-                  <li>Penduricalhos em meses específicos (auxílio fardamento em jan/abr/jul/out)</li>
-                  <li>Descontos em folha (consignado)</li>
-                </ul>
-              </li>
-            </ol>
-            <p>O sistema passa a saber <strong>quanto realmente entra em cada mês</strong>.</p>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="fixas">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-danger" />
-              2. Cadastrar Despesas Fixas
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Vá em <strong>Despesas</strong> → aba "Fixas"</li>
-              <li>Para cada conta que se repete, cadastre:
-                <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                  <li>Nome (Aluguel, Luz, Internet, Escola)</li>
-                  <li>Valor</li>
-                  <li>Dia de vencimento</li>
-                  <li>Categoria</li>
-                </ul>
-              </li>
-            </ol>
-            <p>O sistema soma tudo e mostra quanto da sua renda já está comprometida.</p>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="variaveis">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-warning" />
-              3. Cadastrar Despesas Variáveis
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
-            <p>Sempre que gastar com mercado, farmácia, lazer, etc:</p>
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Vá em <strong>Despesas</strong> → aba "Variáveis"</li>
-              <li>Clique em "Nova Despesa"</li>
-              <li>Preencha data, categoria, valor e forma de pagamento</li>
-              <li>Se for no cartão, marque a opção e escolha o cartão</li>
-            </ol>
-            <p>Se for no cartão, o sistema já manda automaticamente para a fatura correta.</p>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="cartoes">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-primary" />
-              4. Usar Cartão de Crédito
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
-            <p><strong>Primeiro:</strong> cadastre seus cartões em <strong>Cartões</strong>:</p>
-            <ul className="list-disc list-inside ml-4 space-y-1">
-              <li>Nome do cartão</li>
-              <li>Limite</li>
-              <li>Dia de fechamento</li>
-              <li>Dia de vencimento</li>
-            </ul>
-            <p className="mt-2"><strong>Depois:</strong> ao registrar despesas, marque "foi no cartão" e escolha qual.</p>
-            <p>Na tela do cartão você vê: fatura atual, próximas faturas, parcelas futuras.</p>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="cofrinhos">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <PiggyBank className="h-4 w-4 text-success" />
-              5. Criar e Usar Cofrinhos
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Vá em <strong>Cofrinho</strong></li>
-              <li>Clique em "Criar cofrinho"</li>
-              <li>Dê um nome e defina uma meta (opcional)</li>
-              <li>Registre depósitos (quando colocar dinheiro) e retiradas (quando usar)</li>
-            </ol>
-            <p>O sistema mostra saldo atual, histórico e quanto falta para a meta.</p>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
-      {/* Dashboard and Planning */}
-      <div className="grid gap-4 md:grid-cols-2 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <LayoutDashboard className="h-5 w-5 text-primary" />
-              O que o Dashboard mostra
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p className="mb-3">No painel principal você encontra:</p>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                Quanto entrou de receita no mês
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                Quanto saiu em despesas fixas e variáveis
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                Quanto está comprometido no cartão
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                Quanto tem em cofrinhos
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                Previsão de sobra ou falta
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                Insights da IA
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Calendar className="h-5 w-5 text-primary" />
-              Planejamento de 12 meses
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p className="mb-3">Na tela de <strong>Planejamento</strong>, o sistema projeta:</p>
-            <blockquote className="border-l-2 border-primary/50 pl-3 italic mb-3">
-              "Se tudo continuar como está hoje, como vai estar sua vida financeira nos próximos 12 meses?"
-            </blockquote>
-            <p className="mb-2">Considera: salário, despesas fixas, média de variáveis, cartões e cofrinhos.</p>
-            <p>Você verá meses tranquilos (sobra), apertados e críticos.</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* AI */}
-      <Card className="mb-8 border-warning/30 bg-warning/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Lightbulb className="h-5 w-5 text-warning" />
-            Como a IA te ajuda
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          <p className="mb-3">A IA do PIGMONEY:</p>
-          <ul className="space-y-1 mb-4">
-            <li>❌ <strong>Não</strong> mexe no seu dinheiro</li>
-            <li>❌ <strong>Não</strong> toma decisões por você</li>
-            <li>❌ <strong>Não</strong> faz julgamentos morais</li>
-          </ul>
-          <p className="mb-3">Ela apenas lê seus dados, vê padrões e traduz em frases simples:</p>
-          <div className="space-y-2">
-            <div className="rounded-lg bg-background/50 px-3 py-2 text-xs italic">
-              "Seus gastos com lazer subiram 40% comparado à média."
-            </div>
-            <div className="rounded-lg bg-background/50 px-3 py-2 text-xs italic">
-              "Seu consignado termina em setembro. A partir daí, sua renda líquida aumenta em R$ 240/mês."
-            </div>
-            <div className="rounded-lg bg-background/50 px-3 py-2 text-xs italic">
-              "Suas despesas fixas já consomem 72% da sua renda líquida."
-            </div>
-          </div>
-          <p className="mt-3">Use como um amigo sincero que mostra a realidade — <strong>a decisão final é sempre sua</strong>.</p>
-        </CardContent>
-      </Card>
-
-      {/* Quick Start */}
-      <Card className="bg-gradient-to-br from-success/10 to-transparent border-success/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CheckCircle2 className="h-5 w-5 text-success" />
-            Por onde começar (passo a passo)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          <p className="mb-3">Se estiver perdido, faça só isso:</p>
-          <ol className="space-y-2">
-            <li className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success text-success-foreground text-xs font-bold">1</span>
-              Cadastre seu salário
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success text-success-foreground text-xs font-bold">2</span>
-              Cadastre suas despesas fixas principais
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success text-success-foreground text-xs font-bold">3</span>
-              Cadastre seus cartões
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success text-success-foreground text-xs font-bold">4</span>
-              Durante 1 mês, registre toda despesa variável importante
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success text-success-foreground text-xs font-bold">5</span>
-              Crie pelo menos 1 cofrinho
-            </li>
-          </ol>
-          <p className="mt-4 font-medium">
-            Depois desse primeiro mês, o jogo deixa de ser "sentimento" e passa a ser <strong>decisão baseada em números</strong>.
+      {/* Final CTA */}
+      <Card className="bg-gradient-to-r from-primary to-emerald-600 text-white">
+        <CardContent className="py-8 text-center">
+          <Star className="h-10 w-10 mx-auto mb-4 opacity-80" />
+          <h3 className="text-xl font-bold mb-2">Pronto para começar?</h3>
+          <p className="opacity-90 max-w-md mx-auto">
+            Após o primeiro mês de uso, suas decisões financeiras passam a ser baseadas em dados, não em intuição.
           </p>
         </CardContent>
       </Card>
