@@ -16,8 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminUsers() {
+    const { toast } = useToast();
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -46,9 +48,20 @@ export default function AdminUsers() {
                 const data = await response.json();
                 setUsers(data.users);
                 setTotal(data.total);
+            } else {
+                const errorData = await response.json();
+                console.error('Admin API Error:', errorData);
+                // Assume toast is available or use alert strictly for debugging if toast hook not present in this file?
+                // Wait, use-toast is not imported. I should import it.
+                throw new Error(errorData.error || 'Falha ao carregar usuários');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching users:', error);
+            toast({
+                title: "Erro ao carregar usuários",
+                description: error.message || "Verifique se você tem permissão de administrador.",
+                variant: "destructive"
+            });
         } finally {
             setLoading(false);
         }
