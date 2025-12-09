@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
@@ -6,17 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMonthlyProjection, useFixedExpenses, useVariableExpenses, useCreditCards, useCardTransactions } from '@/hooks/useFinancialData';
+import { useEarnings } from '@/hooks/useEarnings';
+import { AddEarningDialog } from '@/components/earnings/AddEarningDialog';
 import { formatCurrency, formatMonthYear, getCurrentYearMonth, EXPENSE_CATEGORIES } from '@/lib/utils';
-import { Wallet, Receipt, CreditCard, PiggyBank, TrendingUp, AlertTriangle } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { Wallet, Receipt, CreditCard, PiggyBank, TrendingUp, AlertTriangle, BadgeDollarSign, CalendarDays, LineChart } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, AreaChart, Area } from 'recharts';
 
 const COLORS = ['hsl(221, 83%, 53%)', 'hsl(173, 58%, 39%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 84%, 60%)', 'hsl(262, 83%, 58%)'];
+const EARNINGS_COLOR = 'hsl(142, 71%, 45%)';
 
 export default function Dashboard() {
   const { projections, summary } = useMonthlyProjection();
   const { data: fixedExpenses = [] } = useFixedExpenses();
   const { data: variableExpenses = [] } = useVariableExpenses();
   const { data: cards = [] } = useCreditCards();
+  const { stats: earningsStats, isLoading: statsLoading } = useEarnings();
   const { data: cardTransactions = [] } = useCardTransactions();
 
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
@@ -56,10 +61,11 @@ export default function Dashboard() {
         title="Dashboard"
         description={`Visão geral de ${formatMonthYear(currentMonth)}`}
         learnMoreSection="dashboard"
+        action={<AddEarningDialog />}
       />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* Primary Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 mb-6">
         <StatCard
           title="Receita Mensal"
           value={summary.monthlyIncome}
@@ -85,6 +91,72 @@ export default function Dashboard() {
           icon={PiggyBank}
           variant="success"
         />
+      </div>
+
+      {/* Variable Income Section */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <BadgeDollarSign className="text-emerald-500" />
+            Renda Variável Inteligente
+          </h2>
+          <Link to="/income/history" className="text-sm text-emerald-500 hover:text-emerald-600 font-medium">
+            Ver histórico &rarr;
+          </Link>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* Income Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3 sm:gap-4 lg:col-span-1">
+            <StatCard
+              title="Ganho Total (Mês)"
+              value={earningsStats.totalMonth}
+              icon={TrendingUp} variant="success"
+              className="bg-emerald-500/10 border-emerald-500/20"
+            />
+            <StatCard
+              title="Média Diária"
+              value={earningsStats.dailyAverage}
+              icon={CalendarDays}
+              variant="info"
+            />
+            <StatCard
+              title="Projeção Mensal"
+              value={earningsStats.projection}
+              subtitle="Se manter o ritmo"
+              icon={LineChart}
+              variant="accent"
+            />
+          </div>
+
+          {/* Last 7 Days Chart */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Evolução - Últimos 7 Dias</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-48 sm:h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={earningsStats.last7Days}>
+                    <defs>
+                      <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={EARNINGS_COLOR} stopOpacity={0.8} />
+                        <stop offset="95%" stopColor={EARNINGS_COLOR} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(val) => `R$${val}`} width={60} />
+                    <Tooltip
+                      formatter={(value: number) => formatCurrency(value)}
+                      labelFormatter={(label) => `Dia ${label}`}
+                    />
+                    <Area type="monotone" dataKey="amount" stroke={EARNINGS_COLOR} fillOpacity={1} fill="url(#colorAmount)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Balance Projection */}

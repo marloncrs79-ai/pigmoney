@@ -11,9 +11,10 @@ import { Suspense, lazy } from "react";
 // Eager load critical pages
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import IncomeHistory from "./pages/IncomeHistory";
 
 // Lazy load feature pages
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Expenses = lazy(() => import("./pages/Expenses"));
 const Cards = lazy(() => import("./pages/Cards"));
 const CardDetail = lazy(() => import("./pages/CardDetail"));
@@ -93,6 +94,7 @@ function AppRoutes() {
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/income/history" element={<ProtectedRoute><IncomeHistory /></ProtectedRoute>} />
           <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
           <Route path="/fixed-expenses" element={<Navigate to="/expenses" replace />} />
           <Route path="/variable-expenses" element={<Navigate to="/expenses" replace />} />
