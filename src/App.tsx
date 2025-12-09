@@ -12,13 +12,12 @@ import { Suspense, lazy } from "react";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import IncomeHistory from "./pages/IncomeHistory";
+import Income from "./pages/Income";
 
 // Lazy load feature pages
 const Expenses = lazy(() => import("./pages/Expenses"));
 const Cards = lazy(() => import("./pages/Cards"));
 const CardDetail = lazy(() => import("./pages/CardDetail"));
-const Income = lazy(() => import("./pages/Income"));
 const PiggyBank = lazy(() => import("./pages/PiggyBank"));
 const PiggyBankDetail = lazy(() => import("./pages/PiggyBankDetail"));
 const Planning = lazy(() => import("./pages/Planning"));
@@ -94,7 +93,7 @@ function AppRoutes() {
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/income/history" element={<ProtectedRoute><IncomeHistory /></ProtectedRoute>} />
+          <Route path="/income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
           <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
           <Route path="/fixed-expenses" element={<Navigate to="/expenses" replace />} />
           <Route path="/variable-expenses" element={<Navigate to="/expenses" replace />} />
