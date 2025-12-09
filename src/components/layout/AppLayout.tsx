@@ -93,40 +93,44 @@ export function AppLayout({ children }: AppLayoutProps) {
         </Link>
       </div>
 
-      {/* Couple name & Actions */}
-      {couple && (
-        <div className="px-6 py-6 mb-2">
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-sidebar-accent/50 border border-sidebar-border">
-            <div className="min-w-0 flex-1 mr-2">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Sparkles className="h-3 w-3 text-emerald-500 fill-emerald-500" />
-                <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">Conta Premium</p>
-              </div>
-              <p className="font-bold text-sidebar-foreground truncate text-sm">{couple.name}</p>
-            </div>
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                onClick={() => navigate('/settings')}
-                title="Configurações"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground/70 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                onClick={handleSignOut}
-                title="Sair"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
+      {/* User Actions - Always visible */}
+      <div className="px-6 py-6 mb-2">
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-sidebar-accent/50 border border-sidebar-border">
+          <div className="min-w-0 flex-1 mr-2">
+            {couple ? (
+              <>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Sparkles className="h-3 w-3 text-emerald-500 fill-emerald-500" />
+                  <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">Conta Premium</p>
+                </div>
+                <p className="font-bold text-sidebar-foreground truncate text-sm">{couple.name}</p>
+              </>
+            ) : (
+              <p className="font-bold text-sidebar-foreground text-sm">Minha Conta</p>
+            )}
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+              onClick={() => navigate('/settings')}
+              title="Configurações"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground/70 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+              onClick={handleSignOut}
+              title="Sair"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-4 pb-6">
