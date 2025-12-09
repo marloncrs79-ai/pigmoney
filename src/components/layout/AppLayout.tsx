@@ -26,15 +26,45 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/expenses', icon: Receipt, label: 'Despesas' },
-  { href: '/cards', icon: CreditCard, label: 'Cartões' },
-  { href: '/income', icon: Wallet, label: 'Receitas' },
-  { href: '/piggy-bank', icon: PiggyBank, label: 'Cofrinho' },
-  { href: '/planning', icon: Calendar, label: 'Planejamento' },
-  { href: '/reports', icon: BarChart3, label: 'Relatórios' },
-  { href: '/guia', icon: HelpCircle, label: 'Guia' },
+const navGroups = [
+  {
+    title: 'Visão Geral',
+    items: [
+      { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' }
+    ]
+  },
+  {
+    title: 'Ganhos',
+    items: [
+      { href: '/income', icon: Wallet, label: 'Salário & Ganhos' }
+    ]
+  },
+  {
+    title: 'Gastos',
+    items: [
+      { href: '/expenses', icon: Receipt, label: 'Despesas' },
+      { href: '/cards', icon: CreditCard, label: 'Cartões' }
+    ]
+  },
+  {
+    title: 'Conquistas',
+    items: [
+      { href: '/piggy-bank', icon: PiggyBank, label: 'Cofrinho' },
+      { href: '/planning', icon: Calendar, label: 'Planejamento' }
+    ]
+  },
+  {
+    title: 'Análise',
+    items: [
+      { href: '/reports', icon: BarChart3, label: 'Relatórios' }
+    ]
+  },
+  {
+    title: 'Suporte',
+    items: [
+      { href: '/guia', icon: HelpCircle, label: 'Guia' }
+    ]
+  }
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -51,12 +81,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   const NavContent = () => (
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4 sm:px-6">
+      <div className="flex h-16 items-center border-b border-sidebar-border px-6">
         <Link to="/dashboard" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-primary shadow-glow-primary transition-all duration-200 group-hover:scale-110">
-            <PiggyBank className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary shadow-glow-primary transition-all duration-200 group-hover:scale-110">
+            <PiggyBank className="h-6 w-6 text-primary-foreground stroke-[2.5px]" />
           </div>
-          <span className="font-display text-lg sm:text-xl font-extrabold text-sidebar-foreground">
+          <span className="font-display text-xl font-extrabold text-sidebar-foreground tracking-tight">
             PIGMONEY
           </span>
         </Link>
@@ -64,59 +94,77 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Couple name & Actions */}
       {couple && (
-        <div className="border-b border-sidebar-border px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-secondary" />
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sua conta</p>
+        <div className="px-6 py-6 mb-2">
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-sidebar-accent/50 border border-sidebar-border">
+            <div className="min-w-0 flex-1 mr-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Sparkles className="h-3 w-3 text-emerald-500 fill-emerald-500" />
+                <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">Conta Premium</p>
+              </div>
+              <p className="font-bold text-sidebar-foreground truncate text-sm">{couple.name}</p>
             </div>
-            <p className="font-bold text-sidebar-foreground truncate mt-1">{couple.name}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
-              onClick={() => navigate('/settings')}
-              title="Configurações"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg"
-              onClick={handleSignOut}
-              title="Sair"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                onClick={() => navigate('/settings')}
+                title="Configurações"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground/70 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                onClick={handleSignOut}
+                title="Sair"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-2 py-3 sm:px-3 sm:py-4">
-        <nav className="space-y-1 sm:space-y-2">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 rounded-2xl px-3 py-3.5 sm:px-4 sm:py-3 text-sm font-bold transition-all duration-200',
-                  isActive
-                    ? 'bg-primary text-primary-foreground shadow-duo'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:scale-[1.02]'
-                )}
-              >
-                <item.icon className="h-6 w-6 sm:h-5 sm:w-5" />
-                {item.label}
-              </Link>
-            );
-          })}
+      <ScrollArea className="flex-1 px-4 pb-6">
+        <nav className="space-y-6">
+          {navGroups.map((group, groupIndex) => (
+            <div key={group.title}>
+              <h4 className="px-2 mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 select-none">
+                {group.title}
+              </h4>
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                  return (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-200 group',
+                        isActive
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 font-bold'
+                          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                      )}
+                    >
+                      <item.icon className={cn(
+                        "h-[18px] w-[18px] stroke-[2px] transition-transform duration-200 group-hover:scale-110",
+                        isActive ? "stroke-[2.5px]" : ""
+                      )} />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+              {/* Separator only between groups, not after the last one */}
+              {groupIndex < navGroups.length - 1 && (
+                <div className="my-4 mx-2 border-b border-border/40" />
+              )}
+            </div>
+          ))}
         </nav>
       </ScrollArea>
     </div>
