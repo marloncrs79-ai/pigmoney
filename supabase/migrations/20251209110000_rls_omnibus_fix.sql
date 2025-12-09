@@ -6,6 +6,11 @@
 -- 1. HELPER FUNCTIONS (Non-Recursive)
 -- ==============================================================================
 
+-- Ensure clean slate for functions to avoid signature conflicts
+-- use CASCADE to automatically drop dependent policies (we recreate them below anyway)
+DROP FUNCTION IF EXISTS public.get_my_couple_ids() CASCADE;
+DROP FUNCTION IF EXISTS public.is_couple_member(uuid) CASCADE;
+
 -- Ensure the helper exists and is secure
 CREATE OR REPLACE FUNCTION public.get_my_couple_ids()
 RETURNS TABLE (couple_id UUID)
