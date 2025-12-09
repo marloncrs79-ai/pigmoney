@@ -108,23 +108,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // 1. Set up the auth state change listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Update React state synchronously
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          fetchCouple(session.user.id);
+          // IMPORTANT: Defer fetchCouple to next tick to avoid Supabase deadlock
+          // See: https://supabase.com/docs/reference/javascript/auth-onauthstatechange
+          setTimeout(() => {
+            fetchCouple(session.user.id);
+          }, 0);
         } else {
           setCouple(null);
+          setCoupleLoading(false);
         }
 
         setLoading(false);
+
+        // Admin override
         if (session?.user?.email === 'marloncrs79@gmail.com') {
           setPlan('pro');
         }
       }
     );
+
+    // 2. THEN check for existing session (handles page refresh)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+        // Defer to next tick
+        setTimeout(() => {
+          fetchCouple(session.user.id);
+        }, 0);
+
+        if (session.user?.email === 'marloncrs79@gmail.com') {
+          setPlan('pro');
+        }
+      } else {
+        setCoupleLoading(false);
+      }
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);

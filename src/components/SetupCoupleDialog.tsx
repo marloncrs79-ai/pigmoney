@@ -8,17 +8,20 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users } from 'lucide-react';
 
 export function SetupCoupleDialog() {
-  const { user, couple, coupleLoading, createCoupleForUser } = useAuth();
+  // Show dialog ONLY if:
+  // 1. Auth is fully loaded (not loading)
+  // 2. User exists (logged in)
+  // 3. Couple data is fully loaded (not loading)
+  // 4. User has no couple configured
+  // 5. We are NOT on a public page
+  const { user, couple, coupleLoading, loading, createCoupleForUser } = useAuth();
   const { toast } = useToast();
   const [coupleName, setCoupleName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Show dialog only if user is logged in, not loading, and has no couple
-  // Show dialog only if user is logged in, not loading, and has no couple
-  // AND not on landing page or auth page
   const location = window.location.pathname;
-  const isPublicPage = location === '/' || location === '/auth';
-  const shouldShow = !!(user && !coupleLoading && !couple && !isPublicPage);
+  const isPublicPage = location === '/' || location === '/auth' || location.startsWith('/terms') || location.startsWith('/privacy');
+  const shouldShow = !!(user && !loading && !coupleLoading && couple === null && !isPublicPage);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
