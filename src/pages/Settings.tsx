@@ -180,15 +180,15 @@ export default function Settings() {
                                 <UserCog className="h-6 w-6 text-foreground" />
                             </div>
                             <div>
-                                <CardTitle className="text-xl">Espaço Financeiro</CardTitle>
-                                <CardDescription>Personalize o nome do seu painel principal.</CardDescription>
+                                <CardTitle className="text-xl">Perfil</CardTitle>
+                                <CardDescription>Personalize como você quer ser chamado.</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleUpdateName} className="space-y-4 max-w-xl">
                             <div className="space-y-2">
-                                <Label htmlFor="workspaceName">Nome do Espaço</Label>
+                                <Label htmlFor="workspaceName">Seu Nome ou Apelido</Label>
                                 <Input
                                     id="workspaceName"
                                     value={workspaceName}

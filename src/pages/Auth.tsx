@@ -178,7 +178,7 @@ export default function Auth() {
             <p className="text-muted-foreground">
               {activeTab === 'login'
                 ? 'Entre para continuar organizando sua vida.'
-                : 'Junte-se a milhares de casais inteligentes.'}
+                : 'Junte-se a milhares de pessoas inteligentes.'}
             </p>
           </div>
 
@@ -239,7 +239,7 @@ export default function Auth() {
             <TabsContent value="signup" className="space-y-6 focus-visible:outline-none">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground/80 font-medium ml-1">Nome do seu Espaço</Label>
+                  <Label className="text-foreground/80 font-medium ml-1">Seu Nome ou Apelido</Label>
                   <Input
                     placeholder="Ex: Família Silva"
                     className="h-12 bg-muted/30 border-muted-foreground/20 rounded-xl focus-visible:ring-primary/20 focus-visible:border-primary transition-all text-base"
