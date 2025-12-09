@@ -130,6 +130,12 @@ export function AIChatWidget() {
                     description: "Por favor, faça login novamente.",
                     variant: "destructive"
                 });
+            } else {
+                toast({
+                    title: "Consultor Pig Indisponível",
+                    description: error.message || "Erro ao conectar com a IA.",
+                    variant: "destructive"
+                });
             }
         } finally {
             setIsLoading(false);
