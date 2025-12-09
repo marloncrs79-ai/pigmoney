@@ -114,13 +114,13 @@ async function buildFinancialContext(supabase: any, coupleId: string, scope: str
   });
 
   // Fetch all piggy banks
+  // Fetch all piggy banks
   const { data: piggyBanks } = await supabase
-    .from('piggy_bank')
-    .select('current_balance, couple_id')
-    .eq('couple_id', coupleId)
-    .maybeSingle();
+    .from('piggy_banks')
+    .select('name, current_balance, goal_amount')
+    .eq('couple_id', coupleId);
 
-  const totalPiggyBankBalance = piggyBanks?.current_balance || 0;
+  const totalPiggyBankBalance = (piggyBanks || []).reduce((sum: number, pb: any) => sum + Number(pb.current_balance), 0);
 
   // Fetch individual piggy banks if table exists (assuming previous code used 'piggy_banks' but migration said 'piggy_bank')
   // Sticking to what migration defined: 'piggy_bank' is singular per couple.
@@ -232,7 +232,11 @@ async function buildFinancialContext(supabase: any, coupleId: string, scope: str
     variable_expenses: (variableExpenses || []).map((e: any) => ({ description: e.description || e.name, amount: e.amount, category: e.category, date: e.date })),
     card_invoices: cardInvoices.filter((c: any) => c.amount > 0),
     piggy_bank: { balance: totalPiggyBankBalance },
-    piggy_banks: [], // Simplified as migration suggests single piggy bank
+    piggy_banks: (piggyBanks || []).map((pb: any) => ({
+      name: pb.name,
+      balance: pb.current_balance,
+      goal: pb.goal_amount
+    })),
     projection_next_months: projections,
     memory_patterns: memoryPatterns || []
   };

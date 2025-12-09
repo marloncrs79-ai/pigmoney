@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { TablesInsert } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -167,7 +168,7 @@ export function useCreateExpense() {
       // Create the expense
       const { data: createdExpense, error } = await supabase
         .from('fixed_expenses')
-        .insert(insertData as any)
+        .insert(insertData as unknown as TablesInsert<'fixed_expenses'>)
         .select()
         .single();
       if (error) throw error;
@@ -412,7 +413,7 @@ export function useDeleteCreditCard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
-      toast({ title: 'Cartão removido!' });
+      toast({ title: 'Cartão removido!', description: 'O cartão foi removido com sucesso.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
@@ -464,7 +465,7 @@ export function useCreateCardTransaction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card-transactions'] });
-      toast({ title: 'Compra adicionada!' });
+      toast({ title: 'Compra adicionada!', description: 'A compra foi registrada com sucesso.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
@@ -483,7 +484,7 @@ export function useDeleteCardTransaction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card-transactions'] });
-      toast({ title: 'Compra removida!' });
+      toast({ title: 'Compra removida!', description: 'A compra foi removida com sucesso.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
@@ -586,7 +587,10 @@ export function useCreatePiggyBank() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['piggy-banks'] });
-      toast({ title: 'Cofrinho criado!' });
+      toast({
+        title: 'Cofrinho criado!',
+        description: 'Seu novo cofrinho foi criado com sucesso.'
+      });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
@@ -612,7 +616,7 @@ export function useUpdatePiggyBank() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['piggy-banks'] });
       queryClient.invalidateQueries({ queryKey: ['piggy-bank', variables.id] });
-      toast({ title: 'Cofrinho atualizado!' });
+      toast({ title: 'Cofrinho atualizado!', description: 'As informações do cofrinho foram atualizadas.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
@@ -631,7 +635,7 @@ export function useDeletePiggyBank() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['piggy-banks'] });
-      toast({ title: 'Cofrinho excluído!' });
+      toast({ title: 'Cofrinho excluído!', description: 'O cofrinho foi removido permanentemente.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
@@ -686,7 +690,7 @@ export function useCreatePiggyBankMovement() {
       queryClient.invalidateQueries({ queryKey: ['piggy-banks'] });
       queryClient.invalidateQueries({ queryKey: ['piggy-bank', variables.piggy_bank_id] });
       queryClient.invalidateQueries({ queryKey: ['piggy-bank-movements', variables.piggy_bank_id] });
-      toast({ title: 'Movimentação registrada!' });
+      toast({ title: 'Movimentação registrada!', description: 'A movimentação foi registrada no cofrinho.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });

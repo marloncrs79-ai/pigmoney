@@ -99,6 +99,30 @@ export type Database = {
           },
         ]
       }
+      cancellation_feedback: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       card_transactions: {
         Row: {
           amount_total: number
@@ -556,7 +580,7 @@ export type Database = {
           created_at: string
           date: string
           id: string
-          piggy_bank_id: string
+          piggy_bank_id: string | null
           reason: string | null
           type: string
         }
@@ -566,7 +590,7 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
-          piggy_bank_id: string
+          piggy_bank_id?: string | null
           reason?: string | null
           type: string
         }
@@ -576,7 +600,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          piggy_bank_id?: string
+          piggy_bank_id?: string | null
           reason?: string | null
           type?: string
         }
@@ -612,7 +636,7 @@ export type Database = {
           current_balance?: number
           goal_amount?: number | null
           id?: string
-          name: string
+          name?: string
         }
         Update: {
           couple_id?: string
@@ -622,7 +646,15 @@ export type Database = {
           id?: string
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "piggy_bank_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       salary_deductions: {
         Row: {
@@ -668,11 +700,30 @@ export type Database = {
           },
         ]
       }
+      supabase_migrations: {
+        Row: {
+          applied_at: string | null
+          name: string | null
+          version: string
+        }
+        Insert: {
+          applied_at?: string | null
+          name?: string | null
+          version: string
+        }
+        Update: {
+          applied_at?: string | null
+          name?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      create_family_space: { Args: { name: string }; Returns: Json }
       is_couple_member: { Args: { _couple_id: string }; Returns: boolean }
     }
     Enums: {

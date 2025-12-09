@@ -9,6 +9,7 @@ export type PigNotifyProps = {
     show: boolean;
     onClose?: () => void;
     showMascot?: boolean;
+    duration?: number;
 };
 
 const typeStyles = {
@@ -42,26 +43,39 @@ const typeStyles = {
     },
 };
 
-export function PigNotify({ type, title, message, show, onClose, showMascot = true }: PigNotifyProps) {
+export function PigNotify({ type, title, message, show, onClose, showMascot = true, duration = 4000 }: PigNotifyProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [isMounting, setIsMounting] = useState(true);
 
     const style = typeStyles[type];
     const Icon = style.icon;
 
-    // Handle entrance animation
+    // Handle entrance animation and auto-close
     useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+
         if (show) {
             setIsMounting(true);
             // Small delay to allow render before animating in
             requestAnimationFrame(() => setIsVisible(true));
+
+            // Auto close timer
+            if (duration > 0 && onClose) {
+                timeoutId = setTimeout(() => {
+                    onClose();
+                }, duration);
+            }
         } else {
             setIsVisible(false);
             // Wait for exit animation
             const t = setTimeout(() => setIsMounting(false), 300);
             return () => clearTimeout(t);
         }
-    }, [show]);
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [show, duration, onClose]);
 
     if (!isMounting && !show) return null;
 

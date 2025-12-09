@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +20,7 @@ export interface FinancialTask {
 
 export function useFinancialTasks() {
   const { couple } = useAuth();
-  
+
   return useQuery({
     queryKey: ['financial-tasks', couple?.id],
     queryFn: async () => {
@@ -40,7 +41,7 @@ export function useCreateTask() {
   const { couple } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   return useMutation({
     mutationFn: async (task: {
       description: string;
@@ -51,11 +52,11 @@ export function useCreateTask() {
       if (!couple?.id) throw new Error('No couple');
       const { data, error } = await supabase
         .from('financial_tasks')
-        .insert({ 
-          ...task, 
+        .insert({
+          ...task,
           couple_id: couple.id,
           status: 'open'
-        } as any)
+        } as unknown as TablesInsert<'financial_tasks'>)
         .select()
         .single();
       if (error) throw error;
@@ -63,7 +64,7 @@ export function useCreateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['financial-tasks'] });
-      toast({ title: 'Tarefa criada!' });
+      toast({ title: 'Tarefa criada!', description: 'Sua tarefa foi criada com sucesso.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
@@ -74,12 +75,12 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<FinancialTask> & { id: string }) => {
       const { data, error } = await supabase
         .from('financial_tasks')
-        .update(updates as any)
+        .update(updates as unknown as TablesUpdate<'financial_tasks'>)
         .eq('id', id)
         .select()
         .single();
@@ -89,7 +90,7 @@ export function useUpdateTask() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['financial-tasks'] });
       if (variables.status === 'done') {
-        toast({ title: 'Tarefa concluída!' });
+        toast({ title: 'Tarefa concluída!', description: 'Parabéns por concluir esta tarefa.' });
       }
     },
     onError: (error) => {
@@ -101,7 +102,7 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('financial_tasks').delete().eq('id', id);
@@ -109,7 +110,7 @@ export function useDeleteTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['financial-tasks'] });
-      toast({ title: 'Tarefa removida!' });
+      toast({ title: 'Tarefa removida!', description: 'A tarefa foi removida da lista.' });
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });

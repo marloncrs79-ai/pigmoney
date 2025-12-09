@@ -32,7 +32,7 @@ export function Toaster() {
             <PigNotify
               type={type}
               title={typeof title === 'string' ? title : undefined}
-              message={typeof description === 'string' ? description : String(description)}
+              message={description ? (typeof description === 'string' ? description : String(description)) : ""}
               show={props.open ?? true}
               onClose={() => dismiss(id)}
               showMascot={true}
