@@ -29,7 +29,13 @@ serve(async (req) => {
             { global: { headers: { Authorization: authHeader } } }
         );
 
-        // Validate user is authenticated
+        // Initialize Admin Client for DB operations (Bypass RLS)
+        const supabaseAdmin = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+
+        // Validate user is authenticated with context client
         const {
             data: { user },
         } = await supabaseClient.auth.getUser();
@@ -38,8 +44,8 @@ serve(async (req) => {
             throw new Error('User not authenticated');
         }
 
-        // Fetch couple_id for the user
-        const { data: memberData, error: memberError } = await supabaseClient
+        // Fetch couple_id for the user using Admin Client
+        const { data: memberData, error: memberError } = await supabaseAdmin
             .from('couple_members')
             .select('couple_id')
             .eq('user_id', user.id)
