@@ -48,136 +48,165 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchCouple = async (userId: string) => {
+    if (!userId) {
+      setCoupleLoading(false);
+      return;
+    }
+
     setCoupleLoading(true);
-    const { data: memberData } = await supabase
-      .from('couple_members')
-      .select('couple_id')
-      .eq('user_id', userId)
-      .maybeSingle();
+    try {
+      const { data: memberData, error: memberError } = await supabase
+        .from('couple_members')
+        .select('couple_id')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (memberData?.couple_id) {
-      const { data: coupleData } = await supabase
-        .from('couples')
-        .select('id, name')
-        .eq('id', memberData.couple_id)
-        .single();
-
-      if (coupleData) {
-        setCouple(coupleData);
+      if (memberError) {
+        console.error('Error fetching member data:', memberError);
+        // Do NOT set couple to null here if we just failed to fetch. 
+        // Only set null if we confirmed there is no member data.
       }
-    }
-    setCoupleLoading(false);
-  };
 
-  const createCoupleForUser = async (coupleName: string) => {
-    if (!user) return { error: new Error('Usuário não autenticado') };
+      if (memberData?.couple_id) {
+        const { data: coupleData, error: coupleError } = await supabase
+          .from('couples')
+          .select('id, name')
+          .eq('id', memberData.couple_id)
+          .single();
 
-    const { data, error } = await supabase.rpc('create_family_space', { name: coupleName });
-
-    if (error) return { error };
-
-    const newCouple = data as unknown as { id: string, name: string };
-    setCouple({ id: newCouple.id, name: newCouple.name });
-    return { error: null };
-  };
-
-  const refreshCouple = async () => {
-    if (user) {
-      await fetchCouple(user.id);
-    }
-  };
-
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        // Defer fetching couple data
-        if (session?.user) {
-          setTimeout(() => {
-            fetchCouple(session.user.id);
-          }, 0);
-        } else {
-          setCouple(null);
+        if (coupleError) {
+          console.error('Error fetching couple data:', coupleError);
         }
-        setLoading(false);
-      }
-    );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (coupleData) {
+          setCouple(coupleData);
+        }
+      } else {
+        setCouple(null); // Valid empty state
+      }
+    } catch (err) {
+      console.error('Unexpected error in fetchCouple:', err);
+    } finally {
+      setCoupleLoading(false);
+    }
+  };
+
+  if (coupleData) {
+    setCouple(coupleData);
+  }
+}
+setCoupleLoading(false);
+  };
+
+const createCoupleForUser = async (coupleName: string) => {
+  if (!user) return { error: new Error('Usuário não autenticado') };
+
+  const { data, error } = await supabase.rpc('create_family_space', { name: coupleName });
+
+  if (error) return { error };
+
+  const newCouple = data as unknown as { id: string, name: string };
+  setCouple({ id: newCouple.id, name: newCouple.name });
+  return { error: null };
+};
+
+const refreshCouple = async () => {
+  if (user) {
+    await fetchCouple(user.id);
+  }
+};
+
+useEffect(() => {
+  // Set up auth state listener FIRST
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
 
-      // Admin Override
-      if (session?.user?.email === 'marloncrs79@gmail.com') {
-        setPlan('pro');
-      }
-
+      // Defer fetching couple data
       if (session?.user) {
-        fetchCouple(session.user.id);
+        setTimeout(() => {
+          fetchCouple(session.user.id);
+        }, 0);
+      } else {
+        setCouple(null);
       }
       setLoading(false);
-    });
+    }
+  );
 
-    return () => subscription.unsubscribe();
-  }, []);
+  // THEN check for existing session
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setSession(session);
+    setUser(session?.user ?? null);
 
-  // Monitor user changes to enforce admin rights
-  useEffect(() => {
-    if (user?.email === 'marloncrs79@gmail.com') {
+    // Admin Override
+    if (session?.user?.email === 'marloncrs79@gmail.com') {
       setPlan('pro');
     }
-  }, [user]);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error as Error | null };
-  };
-
-
-
-  const signUp = async (email: string, password: string, coupleName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
-    });
-
-    if (authError) return { error: authError };
-
-    if (authData.user) {
-      // Use secure RPC to create couple
-      const { data, error: coupleError } = await supabase.rpc('create_family_space', { name: coupleName });
-
-      if (coupleError) return { error: coupleError };
-
-      // Now we can fetch the couple (RLS allows after member is created)
-      const newCouple = data as unknown as { id: string, name: string };
-      setCouple(newCouple);
+    if (session?.user) {
+      fetchCouple(session.user.id);
     }
+    setLoading(false);
+  });
 
-    return { error: null };
-  };
+  return () => subscription.unsubscribe();
+}, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setCouple(null);
-    setPlan('free'); // Reset plan on sign out? Or keep it? Let's reset to defaults.
-    localStorage.removeItem('pig_plan');
-  };
+// Monitor user changes to enforce admin rights
+useEffect(() => {
+  if (user?.email === 'marloncrs79@gmail.com') {
+    setPlan('pro');
+  }
+}, [user]);
 
-  return (
-    <AuthContext.Provider value={{ user, session, couple, plan, loading, coupleLoading, signIn, signUp, signOut, refreshCouple, createCoupleForUser, updatePlan }}>
-      {children}
-    </AuthContext.Provider>
-  );
+const signIn = async (email: string, password: string) => {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  return { error: error as Error | null };
+};
+
+
+
+const signUp = async (email: string, password: string, coupleName: string) => {
+  const redirectUrl = `${window.location.origin}/`;
+
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: redirectUrl
+    }
+  });
+
+  if (authError) return { error: authError };
+
+  if (authData.user) {
+    // Use secure RPC to create couple
+    const { data, error: coupleError } = await supabase.rpc('create_family_space', { name: coupleName });
+
+    if (coupleError) return { error: coupleError };
+
+    // Now we can fetch the couple (RLS allows after member is created)
+    const newCouple = data as unknown as { id: string, name: string };
+    setCouple(newCouple);
+  }
+
+  return { error: null };
+};
+
+const signOut = async () => {
+  await supabase.auth.signOut();
+  setCouple(null);
+  setPlan('free'); // Reset plan on sign out? Or keep it? Let's reset to defaults.
+  localStorage.removeItem('pig_plan');
+};
+
+return (
+  <AuthContext.Provider value={{ user, session, couple, plan, loading, coupleLoading, signIn, signUp, signOut, refreshCouple, createCoupleForUser, updatePlan }}>
+    {children}
+  </AuthContext.Provider>
+);
 }
 
 export function useAuth() {
