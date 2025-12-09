@@ -6,20 +6,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Admin verification (shared with other admin functions)
+// Admin verification middleware
 async function verifyAdmin(authHeader: string | null, supabaseUrl: string, serviceKey: string) {
-  if (!authHeader) throw new Error('No authorization header');
+  if (!authHeader) {
+    throw new Error('No authorization header');
+  }
 
+  // Create client with service role for admin operations
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  // Get user from auth header (verifies the token)
   const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  const { data: { user: jwtUser }, error: authError } = await supabase.auth.getUser(token);
 
-  if (authError || !user) throw new Error('Authentication failed');
+  if (authError || !jwtUser) {
+    throw new Error('Authentication failed');
+  }
 
-  const isAdmin = user.user_metadata?.is_admin === true || user.app_metadata?.is_admin === true;
-  if (!isAdmin) throw new Error('Forbidden: Admin access required');
+  // Fetch fresh user data from database to ensure metadata is up-to-date
+  const { data: { user: dbUser }, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
 
-  return { user, supabase };
+  if (dbError || !dbUser) {
+    throw new Error('User not found');
+  }
+
+  // Check if user is admin (check raw_user_meta_data)
+  const isAdmin = dbUser.user_metadata?.is_admin === true ||
+    dbUser.app_metadata?.is_admin === true;
+
+  if (!isAdmin) {
+    throw new Error('Forbidden: Admin access required');
+  }
+
+  return { user: dbUser, supabase };
 }
 
 serve(async (req) => {

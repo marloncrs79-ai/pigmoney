@@ -15,23 +15,30 @@ async function verifyAdmin(authHeader: string | null, supabaseUrl: string, servi
   // Create client with service role for admin operations
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  // Get user from auth header
+  // Get user from auth header (verifies the token)
   const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  const { data: { user: jwtUser }, error: authError } = await supabase.auth.getUser(token);
 
-  if (authError || !user) {
+  if (authError || !jwtUser) {
     throw new Error('Authentication failed');
   }
 
+  // Fetch fresh user data from database to ensure metadata is up-to-date
+  const { data: { user: dbUser }, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
+
+  if (dbError || !dbUser) {
+    throw new Error('User not found');
+  }
+
   // Check if user is admin (check raw_user_meta_data)
-  const isAdmin = user.user_metadata?.is_admin === true ||
-    user.app_metadata?.is_admin === true;
+  const isAdmin = dbUser.user_metadata?.is_admin === true ||
+    dbUser.app_metadata?.is_admin === true;
 
   if (!isAdmin) {
     throw new Error('Forbidden: Admin access required');
   }
 
-  return { user, supabase };
+  return { user: dbUser, supabase };
 }
 
 // Log admin action
