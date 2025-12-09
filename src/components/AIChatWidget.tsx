@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
     id: string;
@@ -216,12 +217,16 @@ export function AIChatWidget() {
                                         )}
 
                                         <div className={cn(
-                                            "p-3 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap",
+                                            "p-3 rounded-2xl text-sm leading-relaxed shadow-sm",
                                             msg.role === 'user'
-                                                ? "bg-primary text-primary-foreground rounded-tr-sm"
-                                                : "bg-card border border-border rounded-tl-sm text-foreground"
+                                                ? "bg-primary text-primary-foreground rounded-tr-sm whitespace-pre-wrap"
+                                                : "bg-card border border-border rounded-tl-sm text-foreground prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-primary prose-strong:font-semibold"
                                         )}>
-                                            {msg.content}
+                                            {msg.role === 'assistant' ? (
+                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                            ) : (
+                                                msg.content
+                                            )}
                                         </div>
                                     </div>
                                 ))}
