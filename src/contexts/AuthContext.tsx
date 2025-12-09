@@ -38,17 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchingRef = useRef(false);
   const lastFetchedUserId = useRef<string | null>(null);
 
-  // Load plan from local storage on mount
-  useEffect(() => {
-    const savedPlan = localStorage.getItem('pig_plan');
-    if (savedPlan && (savedPlan === 'free' || savedPlan === 'pro' || savedPlan === 'annual')) {
-      setPlan(savedPlan as PlanType);
-    }
-  }, []);
-
   const updatePlan = (newPlan: PlanType) => {
+    // Optimistic update
     setPlan(newPlan);
-    localStorage.setItem('pig_plan', newPlan);
   };
 
   const fetchCouple = async (userId: string, force = false) => {
@@ -73,8 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true;
     setCoupleLoading(true);
 
-    console.log('[AuthContext] Fetching couple for user:', userId);
-
     try {
       const { data: memberData, error: memberError } = await supabase
         .from('couple_members')
@@ -82,30 +72,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .maybeSingle();
 
-      console.log('[AuthContext] Member query result:', { memberData, memberError });
-
       if (memberError) {
         console.error('[AuthContext] Error fetching member data:', memberError);
         setCouple(null);
+        setPlan('free');
       } else if (memberData?.couple_id) {
         const { data: coupleData, error: coupleError } = await supabase
           .from('couples')
-          .select('id, name')
+          .select('id, name, plan')
           .eq('id', memberData.couple_id)
           .single();
-
-        console.log('[AuthContext] Couple query result:', { coupleData, coupleError });
 
         if (coupleError) {
           console.error('[AuthContext] Error fetching couple data:', coupleError);
           setCouple(null);
+          setPlan('free');
         } else if (coupleData) {
-          setCouple(coupleData);
+          setCouple({ id: coupleData.id, name: coupleData.name });
+          // Safe cast or check
+          const dbPlan = coupleData.plan as PlanType;
+          setPlan(dbPlan || 'free');
           lastFetchedUserId.current = userId;
         }
       } else {
         console.log('[AuthContext] No membership found for user');
         setCouple(null);
+        setPlan('free');
       }
     } catch (err) {
       console.error('[AuthContext] Unexpected error in fetchCouple:', err);
@@ -119,7 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const createCoupleForUser = async (coupleName: string) => {
     if (!user) return { error: new Error('Usuário não autenticado') };
 
-    console.log('[AuthContext] Creating couple:', coupleName);
     const { data, error } = await supabase.rpc('create_family_space', { name: coupleName });
 
     if (error) {
@@ -127,9 +118,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    console.log('[AuthContext] Couple created:', data);
     const newCouple = data as unknown as { id: string, name: string };
     setCouple({ id: newCouple.id, name: newCouple.name });
+    setPlan('free'); // Default for new couples
     lastFetchedUserId.current = user.id;
     return { error: null };
   };
@@ -148,8 +139,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
-
-        console.log('[AuthContext] Auth state changed:', event, session?.user?.id);
 
         setSession(session);
         setUser(session?.user ?? null);
@@ -170,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setCouple(null);
           setCoupleLoading(false);
           lastFetchedUserId.current = null;
+          setPlan('free');
         }
 
         setLoading(false);
@@ -214,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const newCouple = data as unknown as { id: string, name: string };
       setCouple(newCouple);
+      setPlan('free');
       lastFetchedUserId.current = authData.user.id;
     }
 
@@ -242,3 +233,4 @@ export function useAuth() {
   }
   return context;
 }
+
