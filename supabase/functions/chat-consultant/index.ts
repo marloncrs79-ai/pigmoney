@@ -197,15 +197,22 @@ serve(async (req) => {
     }
 
     try {
+        console.log('=== Chat Consultant Function Start ===');
+
         const authHeader = req.headers.get("Authorization");
+        console.log('Auth header present:', !!authHeader);
         if (!authHeader) throw new Error('No authorization header');
 
         const { message } = await req.json().catch(() => ({ message: null }));
+        console.log('Message received:', message);
         if (!message) throw new Error('Message is required');
 
         const apiKey = Deno.env.get('GEMINI_API_KEY')
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!
         const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!
+
+        console.log('GEMINI_API_KEY present:', !!apiKey);
+        console.log('Supabase URL:', supabaseUrl);
 
         if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
 
@@ -213,8 +220,20 @@ serve(async (req) => {
             global: { headers: { Authorization: authHeader } },
         });
 
+        console.log('Getting user from auth...');
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) throw new Error('Autenticação falhou');
+
+        if (authError) {
+            console.error('Auth error:', authError);
+            throw new Error(`Auth error: ${authError.message}`);
+        }
+
+        if (!user) {
+            console.error('No user found');
+            throw new Error('User not authenticated');
+        }
+
+        console.log('User authenticated:', user.id);
 
         const { data: membership } = await supabase
             .from('couple_members')
@@ -222,21 +241,23 @@ serve(async (req) => {
             .eq('user_id', user.id)
             .maybeSingle();
 
+        console.log('Membership:', membership);
+
         let financialContext = {};
         if (membership) {
             try {
+                console.log('Building financial context...');
                 financialContext = await buildFinancialContext(supabase, membership.couple_id);
+                console.log('Financial context built successfully');
             } catch (err) {
                 console.error('Error building financial context:', err);
-                // Continue with empty context but log error
                 financialContext = { error: "Failed to load financial data" };
             }
         }
 
+        console.log('Initializing Gemini AI...');
         const genAI = new GoogleGenerativeAI(apiKey)
-        // Use gemini-1.5-flash which is stable and fast
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-
 
         // Prompt do sistema ATUALIZADO
         const systemPrompt = `
@@ -255,7 +276,7 @@ serve(async (req) => {
       - Se for bom, comemore com o usuário!
       
       REGRAS DE RESPOSTA:
-      1. CUMPRIMENTOS: Se o usuário disser apenas "oi", "bom dia", etc., responda APENAS com um cumprimento amigável (ex: "Oink! Olá! Pr pronto para analisar seus números? 🐷"). NÃO despeje dados financeiros sem ser perguntado.
+      1. CUMPRIMENTOS: Se o usuário disser apenas "oi", "bom dia", etc., responda APENAS com um cumprimento amigável (ex: "Oink! Olá! Pronto para analisar seus números? 🐷"). NÃO despeje dados financeiros sem ser perguntado.
       2. PERGUNTAS ESPECÍFICAS: Se perguntarem "quanto gastei com X?", vasculhe as listas de 'variable_expenses' e 'fixed_expenses'. Some os valores se tiver mais de um item.
       3. DECISÕES DE COMPRA: Se perguntarem "posso comprar X?", olhe o 'balance' (saldo atual) e principalmente a 'projection_next_months' (projeção). Se a projeção for negativa, alerte.
       4. NÃO ALUCINE: Se a informação não estiver no JSON, diga "Não encontrei essa informação nos seus registros recentes".
@@ -275,9 +296,13 @@ serve(async (req) => {
             ],
         })
 
+        console.log('Sending message to Gemini...');
         const result = await chat.sendMessage(message)
         const response = await result.response
         const text = response.text()
+
+        console.log('Response received from Gemini');
+        console.log('=== Chat Consultant Function Success ===');
 
         return new Response(
             JSON.stringify({ reply: text }),
@@ -285,9 +310,13 @@ serve(async (req) => {
         )
 
     } catch (error) {
-        console.error('Error:', error)
+        console.error('=== Chat Consultant Function Error ===');
+        console.error('Error details:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+
         return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ error: error.message || 'Internal server error' }),
             {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
