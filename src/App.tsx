@@ -34,6 +34,12 @@ const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const AdminUserDetail = lazy(() => import("./pages/admin/UserDetail"));
 const AdminMetrics = lazy(() => import("./pages/admin/Metrics"));
 const AdminLogs = lazy(() => import("./pages/admin/Logs"));
+const AdminReports = lazy(() => import("./pages/admin/Reports"));
+const AdminCancellations = lazy(() => import("./pages/admin/Cancellations"));
+
+// Support pages lazy
+const SupportCentral = lazy(() => import("./pages/support/SupportCentral"));
+const ReportProblem = lazy(() => import("./pages/support/ReportProblem"));
 
 // Public pages lazy
 const Terms = lazy(() => import("./pages/Terms"));
@@ -114,6 +120,10 @@ function AppRoutes() {
           <Route path="/admin/users/:id" element={<AdminUserDetail />} />
           <Route path="/admin/metrics" element={<AdminMetrics />} />
           <Route path="/admin/logs" element={<AdminLogs />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
+          <Route path="/admin/cancellations" element={<AdminCancellations />} />
+          <Route path="/support" element={<ProtectedRoute><SupportCentral /></ProtectedRoute>} />
+          <Route path="/support/report-problem" element={<ProtectedRoute><ReportProblem /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

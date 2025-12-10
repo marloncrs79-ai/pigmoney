@@ -21,7 +21,9 @@ import {
   Settings,
   Bot,
   X,
-  User
+  User,
+  Headphones,
+  AlertCircle
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -64,7 +66,9 @@ const navGroups = [
   {
     title: 'Suporte',
     items: [
-      { href: '/guia', icon: HelpCircle, label: 'Guia' }
+      { href: '/guia', icon: HelpCircle, label: 'Guia' },
+      { href: '/support', icon: Headphones, label: 'Central de Suporte' },
+      { href: '/support/report-problem', icon: AlertCircle, label: 'Reportar Problema' }
     ]
   }
 ];

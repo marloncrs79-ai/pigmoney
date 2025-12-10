@@ -8,7 +8,9 @@ import {
     LayoutDashboard,
     LogOut,
     ShieldCheck,
-    Menu
+    Menu,
+    MessageSquare,
+    XCircle
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -43,6 +45,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { icon: Users, label: 'Usuários', path: '/admin/users' },
         { icon: Activity, label: 'Métricas', path: '/admin/metrics' },
         { icon: FileText, label: 'Logs do Sistema', path: '/admin/logs' },
+        { icon: MessageSquare, label: 'Reports', path: '/admin/reports' },
+        { icon: XCircle, label: 'Cancelamentos', path: '/admin/cancellations' },
     ];
 
     const SidebarContent = () => (

@@ -23,13 +23,11 @@ interface CancellationModalProps {
 }
 
 const CANCELLATION_REASONS = [
-    "O aplicativo não atendeu minhas expectativas",
-    "Encontrei outro app melhor",
-    "Preço alto para o que oferece",
-    "Recursos faltando para minha necessidade",
-    "Dificuldade de usar o sistema",
-    "Experiência ruim ou bugs",
-    "Apenas testando, não preciso mais",
+    "Ficou caro",
+    "Não entendi como usar",
+    "Encontrei outro app",
+    "Problemas técnicos",
+    "Pouco útil pra mim",
     "Outro motivo"
 ];
 

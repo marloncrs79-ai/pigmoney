@@ -8,13 +8,13 @@ import { PlanType } from '@/contexts/AuthContext';
 export function getUserPlanLabel(plan: PlanType | null | undefined): string {
     switch (plan) {
         case 'free':
-            return 'Usuário: Pig Free';
+            return 'Pig Free';
         case 'pro':
-            return 'Usuário: Pig Pro';
+            return 'Pig Pro';
         case 'annual':
-            return 'Usuário: Pig VIP';
+            return 'Pig VIP';
         default:
-            return 'Usuário: Plano Indefinido';
+            return 'Plano Indefinido';
     }
 }
 
