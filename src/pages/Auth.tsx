@@ -36,7 +36,6 @@ export default function Auth() {
     confirmEmail: '',
     password: '',
     confirmPassword: '',
-    confirmPassword: '',
     coupleName: ''
   });
 
@@ -122,7 +121,6 @@ export default function Auth() {
       navigate('/dashboard');
     }
 
-    setIsSubmitting(false);
     setIsSubmitting(false);
   };
 
