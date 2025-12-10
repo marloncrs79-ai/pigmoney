@@ -46,6 +46,7 @@ export default function AdminUsers() {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('Admin Users API Payload:', data);
                 setUsers(data.users);
                 setTotal(data.total);
             } else {

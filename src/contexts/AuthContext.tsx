@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPlan(newPlan);
   };
 
-  const fetchCouple = async (userId: string, force = false) => {
+  const fetchCouple = async (userId: string, force = false, userEmail?: string) => {
     // Prevent concurrent fetches for the same user
     if (!userId) {
       setCoupleLoading(false);
@@ -105,6 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       fetchingRef.current = false;
       setCoupleLoading(false);
+
+      // Re-enforce admin rights after fetch
+      const emailToCheck = userEmail || user?.email;
+      if (emailToCheck === 'marloncrs79@gmail.com') {
+        setPlan('pro');
+      }
     }
   };
 
@@ -128,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshCouple = async () => {
     if (user) {
       lastFetchedUserId.current = null; // Force refresh
-      await fetchCouple(user.id, true);
+      await fetchCouple(user.id, true, user.email);
     }
   };
 
@@ -147,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Use setTimeout to avoid Supabase internal deadlock
           setTimeout(() => {
             if (mounted) {
-              fetchCouple(session.user.id);
+              fetchCouple(session.user.id, false, session.user.email);
             }
           }, 50); // Small delay to ensure RLS sees the data
 

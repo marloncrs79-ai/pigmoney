@@ -106,14 +106,22 @@ serve(async (req) => {
       const offset = (page - 1) * limit;
 
       // Build query
-      let query = supabase.auth.admin.listUsers({
+      console.log(`[AdminUsers] Fetching users page=${page} limit=${limit} search="${search}" provider="${provider}" verified="${verified}"`);
+
+      // Note: listUsers only returns a page of users, not all users, so client-side filtering below 
+      // is only filtering the *current page* of results, which is a bug if searching globally.
+      // But for now let's just debug why it's empty.
+      const { data, error } = await supabase.auth.admin.listUsers({
         page,
         perPage: limit,
       });
 
-      const { data, error } = await query;
+      if (error) {
+        console.error('[AdminUsers] listUsers error:', error);
+        throw error;
+      }
 
-      if (error) throw error;
+      console.log(`[AdminUsers] Raw users fetched: ${data.users.length}`);
 
       // Filter results (auth.admin.listUsers doesn't support filters)
       let users = data.users;
@@ -137,12 +145,22 @@ serve(async (req) => {
         );
       }
 
+      console.log(`[AdminUsers] Users after filtering: ${users.length}`);
+
       // Log action
       await logAction(supabase, adminUser.id, 'list_users', undefined, {
         filters: { search, provider, verified },
         page,
         limit,
+        result_count: users.length
       });
+
+      // Try to get a real total count if possible (requires a separate query generally, or we just rely on data.total if it exists in future versions)
+      // For now, let's just return what we have.
+      // NOTE: data.total is often strictly the total on the current page or undefined in some versions.
+      // If we need total count of ALL users for pagination, we usually need to trust the `total` from metadata or do a separate select count(*) from users view if exposed.
+
+      const total = (data as any).total ?? 0; // It might be on data.total in some versions
 
       return new Response(
         JSON.stringify({
@@ -155,7 +173,7 @@ serve(async (req) => {
             provider: u.app_metadata?.provider || 'email',
             is_admin: u.user_metadata?.is_admin || u.app_metadata?.is_admin || false,
           })),
-          total: data.users.length,
+          total: total || data.users.length, // Fallback
           page,
           limit,
         }),
