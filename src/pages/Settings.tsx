@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Lock, UserCog, CreditCard, AlertCircle } from 'lucide-react';
+import { Loader2, Save, Lock, UserCog, CreditCard, AlertCircle, Settings as SettingsIcon } from 'lucide-react';
 import { CancellationModal } from '@/components/CancellationModal';
 
 export default function Settings() {
@@ -158,6 +158,7 @@ export default function Settings() {
                                         className="text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors"
                                         onClick={() => setModalOpen(true)}
                                     >
+                                        <SettingsIcon className="mr-2 h-4 w-4" />
                                         Cancelar Plano
                                     </Button>
                                 )}

@@ -6,8 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Wallet, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Wallet, Loader2, CheckCircle2, ArrowRight, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -26,8 +36,14 @@ export default function Auth() {
     confirmEmail: '',
     password: '',
     confirmPassword: '',
+    confirmPassword: '',
     coupleName: ''
   });
+
+  // Forgot Password State
+  const [showForgotDialog, setShowForgotDialog] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [isForgotSubmitting, setIsForgotSubmitting] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -107,6 +123,36 @@ export default function Auth() {
     }
 
     setIsSubmitting(false);
+    setIsSubmitting(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+
+    setIsForgotSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado! 📨",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+      setShowForgotDialog(false);
+      setForgotEmail("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar",
+        description: error.message || "Tente novamente mais tarde.",
+      });
+    } finally {
+      setIsForgotSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -119,6 +165,41 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-screen w-full bg-background overflow-hidden">
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotDialog} onOpenChange={setShowForgotDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recuperar Senha</DialogTitle>
+            <DialogDescription>
+              Digite seu email abaixo e enviaremos um link seguro para você redefinir sua senha.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">Email cadastrado</Label>
+              <Input
+                id="forgot-email"
+                type="email"
+                placeholder="seu@email.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+                className="h-11"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowForgotDialog(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isForgotSubmitting}>
+                {isForgotSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                Enviar Link
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* LEFT SIDE: BRANDING AREA (Desktop) */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden flex-col justify-between p-12 text-primary-foreground">
         {/* Background Decoration */}
@@ -217,7 +298,14 @@ export default function Auth() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-foreground/80 font-medium ml-1">Senha</Label>
-                    <button type="button" className="text-xs text-primary font-semibold hover:underline" tabIndex={-1}>Esqueci minha senha</button>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotDialog(true)}
+                      className="text-xs text-primary font-semibold hover:underline"
+                      tabIndex={-1}
+                    >
+                      Esqueci minha senha
+                    </button>
                   </div>
                   <Input
                     type="password"

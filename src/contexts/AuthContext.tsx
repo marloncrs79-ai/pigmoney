@@ -107,10 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCoupleLoading(false);
 
       // Re-enforce admin rights after fetch
-      const emailToCheck = userEmail || user?.email;
-      if (emailToCheck === 'marloncrs79@gmail.com') {
-        setPlan('pro');
-      }
+      // Re-enforce admin rights removed
+      // const emailToCheck = userEmail || user?.email;
+      // if (emailToCheck === 'marloncrs79@gmail.com') {
+      //   setPlan('pro');
+      // }
     }
   };
 
@@ -157,10 +158,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }, 50); // Small delay to ensure RLS sees the data
 
-          // Admin override
-          if (session.user.email === 'marloncrs79@gmail.com') {
-            setPlan('pro');
-          }
+          // Admin override removed to respect database state
+          // if (session.user.email === 'marloncrs79@gmail.com') {
+          //   setPlan('pro');
+          // }
         } else {
           setCouple(null);
           setCoupleLoading(false);
@@ -179,11 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Monitor user changes to enforce admin rights
-  useEffect(() => {
-    if (user?.email === 'marloncrs79@gmail.com') {
-      setPlan('pro');
-    }
-  }, [user]);
+  // Removed hardcoded admin plan override to allow correct plan assignment from database
+
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
