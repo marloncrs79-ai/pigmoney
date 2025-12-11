@@ -700,11 +700,11 @@ export function useCreatePiggyBankMovement() {
 
 // Calculated Data Hooks
 export function useMonthlyProjection() {
-  const { data: fixedExpenses = [] } = useFixedExpenses();
-  const { data: income = [] } = useIncome();
-  const { data: cardTransactions = [] } = useCardTransactions();
-  const { data: variableExpenses = [] } = useVariableExpenses();
-  const { data: piggyBanks = [] } = usePiggyBanks();
+  const { data: fixedExpenses = [], isLoading: isLoadingFixed } = useFixedExpenses();
+  const { data: income = [], isLoading: isLoadingIncome } = useIncome();
+  const { data: cardTransactions = [], isLoading: isLoadingCards } = useCardTransactions();
+  const { data: variableExpenses = [], isLoading: isLoadingVariable } = useVariableExpenses();
+  const { data: piggyBanks = [], isLoading: isLoadingPiggy } = usePiggyBanks();
 
   const months = getNext12Months();
   const currentMonth = getCurrentYearMonth();
@@ -777,13 +777,7 @@ export function useMonthlyProjection() {
     };
   });
 
-  const isLoading = [
-    useFixedExpenses,
-    useIncome,
-    useCardTransactions,
-    useVariableExpenses,
-    usePiggyBanks
-  ].some(hook => hook().isLoading);
+  const isLoading = isLoadingFixed || isLoadingIncome || isLoadingCards || isLoadingVariable || isLoadingPiggy;
 
   return {
     projections,
