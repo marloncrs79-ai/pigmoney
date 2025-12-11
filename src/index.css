@@ -1079,3 +1079,417 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================
+   MOBILE-FIRST UTILITIES
+   ============================================
+   These utilities provide app-like experience
+   on mobile devices with proper touch handling,
+   safe areas, and performance optimizations.
+   ============================================ */
+
+/* ========== SAFE AREA INSETS ========== */
+/* For devices with notches (iPhone X+) */
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-inset-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-inset-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.safe-area-insets {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* ========== TOUCH TARGETS ========== */
+/* Minimum 44px touch target for accessibility */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.touch-target-lg {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+.touch-target-xl {
+  min-height: 56px;
+  min-width: 56px;
+}
+
+/* ========== TOUCH FEEDBACK ========== */
+.tap-highlight {
+  -webkit-tap-highlight-color: hsl(var(--primary) / 0.1);
+}
+
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Active state for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .touch-active:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+}
+
+/* ========== GPU ACCELERATION ========== */
+/* Force GPU acceleration for smoother animations */
+.gpu-accelerate {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ========== MOBILE NAVIGATION ========== */
+.mobile-nav {
+  @apply fixed bottom-0 left-0 right-0 z-fixed;
+  @apply bg-background/95 backdrop-blur-lg;
+  @apply border-t border-border;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.mobile-nav-item {
+  @apply flex flex-col items-center justify-center gap-1;
+  @apply py-2 px-3 min-h-[56px];
+  @apply text-muted-foreground transition-colors duration-150;
+  @apply tap-highlight-none touch-target;
+}
+
+.mobile-nav-item.active {
+  @apply text-primary;
+}
+
+.mobile-nav-item:active {
+  @apply scale-95;
+}
+
+.mobile-nav-icon {
+  @apply w-6 h-6 transition-transform duration-150;
+}
+
+.mobile-nav-item.active .mobile-nav-icon {
+  @apply scale-110;
+}
+
+.mobile-nav-label {
+  @apply text-[10px] font-medium leading-none;
+}
+
+/* ========== FLOATING ACTION BUTTON ========== */
+.fab {
+  @apply fixed z-fixed rounded-full shadow-xl;
+  @apply flex items-center justify-center;
+  @apply bg-primary text-primary-foreground;
+  @apply w-14 h-14;
+  @apply transition-all duration-200 ease-out;
+  right: 16px;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+.fab:active {
+  @apply scale-90;
+}
+
+.fab:hover {
+  @apply shadow-2xl;
+  @apply bg-primary-600;
+}
+
+/* Position when no bottom nav */
+.fab-bottom {
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ========== MOBILE MODAL ========== */
+.mobile-modal {
+  @apply fixed inset-0 z-modal bg-background;
+  @apply flex flex-col;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-modal-header {
+  @apply flex items-center justify-between px-4 h-14;
+  @apply border-b border-border;
+}
+
+.mobile-modal-content {
+  @apply flex-1 overflow-y-auto p-4;
+  @apply overscroll-contain;
+}
+
+.mobile-modal-footer {
+  @apply p-4 border-t border-border;
+  @apply bg-background;
+}
+
+/* ========== MOBILE DRAWER ========== */
+.mobile-drawer {
+  @apply fixed inset-x-0 bottom-0 z-modal;
+  @apply bg-background rounded-t-3xl;
+  @apply shadow-2xl;
+  max-height: 90vh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-drawer-handle {
+  @apply w-12 h-1.5 bg-muted-foreground/30 rounded-full;
+  @apply mx-auto mt-3 mb-4;
+}
+
+/* ========== SWIPEABLE ACTIONS ========== */
+.swipe-container {
+  @apply relative overflow-hidden;
+}
+
+.swipe-content {
+  @apply relative z-10 bg-background;
+  @apply transition-transform duration-200 ease-out;
+}
+
+.swipe-actions {
+  @apply absolute inset-y-0 right-0;
+  @apply flex items-stretch;
+}
+
+.swipe-action {
+  @apply flex items-center justify-center px-6;
+  @apply font-medium text-white;
+}
+
+.swipe-action-delete {
+  @apply bg-danger;
+}
+
+.swipe-action-edit {
+  @apply bg-info;
+}
+
+/* ========== PULL TO REFRESH ========== */
+.pull-indicator {
+  @apply flex items-center justify-center py-4;
+  @apply text-muted-foreground;
+}
+
+/* ========== MOBILE-FIRST SPACING ========== */
+/* Compact spacing for mobile, expands on larger screens */
+.space-mobile {
+  @apply space-y-3 sm:space-y-4 lg:space-y-6;
+}
+
+.gap-mobile {
+  @apply gap-3 sm:gap-4 lg:gap-6;
+}
+
+.p-mobile {
+  @apply p-4 sm:p-6 lg:p-8;
+}
+
+.px-mobile {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+.py-mobile {
+  @apply py-4 sm:py-6 lg:py-8;
+}
+
+/* ========== MOBILE CARD VARIANTS ========== */
+.card-mobile {
+  @apply bg-card rounded-xl sm:rounded-2xl;
+  @apply border border-border;
+  @apply p-4 sm:p-6;
+}
+
+.card-mobile-compact {
+  @apply bg-card rounded-lg sm:rounded-xl;
+  @apply border border-border;
+  @apply p-3 sm:p-4;
+}
+
+/* ========== MOBILE TEXT SIZES ========== */
+.text-mobile-xs {
+  @apply text-[11px] sm:text-xs;
+}
+
+.text-mobile-sm {
+  @apply text-xs sm:text-sm;
+}
+
+.text-mobile-base {
+  @apply text-sm sm:text-base;
+}
+
+.text-mobile-lg {
+  @apply text-base sm:text-lg;
+}
+
+.text-mobile-xl {
+  @apply text-lg sm:text-xl;
+}
+
+.text-mobile-2xl {
+  @apply text-xl sm:text-2xl;
+}
+
+.text-mobile-3xl {
+  @apply text-2xl sm:text-3xl;
+}
+
+/* ========== MOBILE BUTTON VARIANTS ========== */
+.btn-mobile {
+  @apply h-12 sm:h-10 text-base sm:text-sm;
+  @apply touch-target;
+}
+
+.btn-mobile-lg {
+  @apply h-14 sm:h-12 text-lg sm:text-base;
+  @apply touch-target-xl;
+}
+
+/* ========== MOBILE FORM INPUTS ========== */
+.input-mobile {
+  @apply h-12 sm:h-10 text-base sm:text-sm;
+  @apply touch-target;
+}
+
+/* Prevent zoom on iOS when focusing inputs */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ========== MOBILE GRID UTILITIES ========== */
+.grid-mobile-1 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+.grid-mobile-2 {
+  @apply grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4;
+}
+
+/* ========== MOBILE LIST ITEM ========== */
+.list-item-mobile {
+  @apply flex items-center gap-3 p-4;
+  @apply border-b border-border last:border-b-0;
+  @apply touch-target tap-highlight;
+  @apply transition-colors duration-150;
+}
+
+.list-item-mobile:active {
+  @apply bg-muted/50;
+}
+
+/* ========== HIDE ON MOBILE ========== */
+.hide-mobile {
+  @apply hidden sm:flex;
+}
+
+.show-mobile {
+  @apply flex sm:hidden;
+}
+
+/* ========== MOBILE BOTTOM PADDING ========== */
+/* Add padding to account for mobile nav bar */
+.pb-mobile-nav {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ========== PREVENT OVERSCROLL ========== */
+.overscroll-none {
+  overscroll-behavior: none;
+}
+
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* ========== SMOOTH MOMENTUM SCROLLING ========== */
+.scroll-smooth-mobile {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* ========== LOADING SKELETON VARIANTS ========== */
+.skeleton-shine {
+  @apply relative overflow-hidden;
+  @apply bg-muted rounded-lg;
+}
+
+.skeleton-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--foreground) / 0.05) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Skeleton sizes */
+.skeleton-text {
+  @apply skeleton-shine h-4 rounded;
+}
+
+.skeleton-text-sm {
+  @apply skeleton-shine h-3 rounded;
+}
+
+.skeleton-text-lg {
+  @apply skeleton-shine h-5 rounded;
+}
+
+.skeleton-heading {
+  @apply skeleton-shine h-8 rounded-lg;
+}
+
+.skeleton-button {
+  @apply skeleton-shine h-10 rounded-lg;
+}
+
+.skeleton-card {
+  @apply skeleton-shine h-32 rounded-2xl;
+}
+
+.skeleton-avatar {
+  @apply skeleton-shine h-10 w-10 rounded-full;
+}
+
+.skeleton-chart {
+  @apply skeleton-shine h-48 rounded-xl;
+}

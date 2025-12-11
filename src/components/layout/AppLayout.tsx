@@ -5,8 +5,9 @@ import { getUserPlanLabel } from '@/lib/plan-utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { AIChatWidget } from '@/components/AIChatWidget';
+import { MobileNav } from '@/components/layout/MobileNav';
 import {
   LayoutDashboard,
   Receipt,
@@ -16,14 +17,12 @@ import {
   Calendar,
   BarChart3,
   LogOut,
-  Menu,
   HelpCircle,
   Settings,
-  Bot,
-  X,
   User,
   Headphones,
-  AlertCircle
+  AlertCircle,
+  ChevronRight
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -77,7 +76,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { couple, signOut, plan } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -98,7 +97,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </Link>
       </div>
 
-      {/* User Actions - Always visible */}
+      {/* User Actions */}
       <div className="px-6 py-6 mb-2">
         <div className="flex items-center justify-between p-3 rounded-2xl bg-sidebar-accent/50 border border-sidebar-border">
           <div className="min-w-0 flex-1 mr-2">
@@ -124,8 +123,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-              onClick={() => navigate('/settings')}
+              className="h-8 w-8 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-lg transition-all touch-target"
+              onClick={() => { navigate('/settings'); setMobileMenuOpen(false); }}
               title="Configurações"
             >
               <Settings className="h-4 w-4" />
@@ -133,7 +132,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground/70 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+              className="h-8 w-8 text-muted-foreground/70 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all touch-target"
               onClick={handleSignOut}
               title="Sair"
             >
@@ -158,9 +157,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <Link
                       key={item.href}
                       to={item.href}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={() => setMobileMenuOpen(false)}
                       className={cn(
-                        'flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-200 group',
+                        'flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-200 group touch-target',
                         isActive
                           ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 font-bold'
                           : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
@@ -170,12 +169,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                         "h-[18px] w-[18px] stroke-[2px] transition-transform duration-200 group-hover:scale-110",
                         isActive ? "stroke-[2.5px]" : ""
                       )} />
-                      {item.label}
+                      <span className="flex-1">{item.label}</span>
+                      {isActive && <ChevronRight className="h-4 w-4 opacity-50" />}
                     </Link>
                   );
                 })}
               </div>
-              {/* Separator only between groups, not after the last one */}
               {groupIndex < navGroups.length - 1 && (
                 <div className="my-4 mx-2 border-b border-border/40" />
               )}
@@ -193,58 +192,46 @@ export function AppLayout({ children }: AppLayoutProps) {
         <NavContent />
       </aside>
 
+      {/* Mobile Drawer/Sheet */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-[300px] sm:w-80 bg-sidebar p-0 border-r-0">
+          <NavContent />
+        </SheetContent>
+      </Sheet>
+
       {/* Mobile Header */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 sm:h-16 items-center border-b border-border bg-card px-3 sm:px-4 lg:hidden shadow-duo">
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          {/* Default Trigger Hidden but kept for semantic/structure if needed, or we can remove if FAB is the only way */}
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="-ml-1 rounded-2xl h-11 w-11 lg:hidden opacity-0 pointer-events-none">
-              <Menu className="h-7 w-7" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[280px] sm:w-72 bg-sidebar p-0 border-r-0">
-            <NavContent />
-          </SheetContent>
-        </Sheet>
-        <div className="flex items-center gap-2 ml-2 absolute left-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-border bg-card/95 backdrop-blur-md px-4 lg:hidden safe-area-inset-top">
+        <Link to="/dashboard" className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg">
             <PiggyBank className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-display font-extrabold text-lg">PIGMONEY</span>
-        </div>
-      </div>
+          <span className="font-display font-extrabold text-lg tracking-tight">PIGMONEY</span>
+        </Link>
 
-      {/* PREMIUM MOBILE FAB MENU */}
-      <div className="fixed bottom-24 right-6 z-[60] lg:hidden">
-        <Button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className={cn(
-            "h-[54px] w-[54px] rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-200 ease-out active:scale-90",
-            "bg-[#10B981] hover:bg-[#059669] text-white border-0", // Green official
-          )}
-          style={{
-            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)"
-          }}
-        >
-          <div className={cn(
-            "transition-all duration-300 transform",
-            mobileOpen ? "rotate-90 scale-100" : "rotate-0 scale-100"
-          )}>
-            {mobileOpen ? (
-              <X className="h-7 w-7 stroke-[2.5px]" />
-            ) : (
-              <Menu className="h-7 w-7 stroke-[2.5px]" />
-            )}
-          </div>
-        </Button>
-      </div>
+        {/* Settings quick access on mobile header */}
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl touch-target"
+            onClick={() => navigate('/settings')}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
+      </header>
 
       {/* Main content */}
-      <main className="flex-1 pt-14 sm:pt-16 lg:pt-0 w-full">
+      <main className="flex-1 pt-14 lg:pt-0 w-full pb-mobile-nav lg:pb-0">
         <div className="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-6xl mx-auto">
           {children}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileNav onMenuClick={() => setMobileMenuOpen(true)} />
+
+      {/* AI Chat Widget */}
       <AIChatWidget />
     </div>
   );
