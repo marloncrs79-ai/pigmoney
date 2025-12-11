@@ -79,7 +79,12 @@ serve(async (req) => {
         const { user: adminUser, supabase } = await verifyAdmin(authHeader, supabaseUrl, serviceKey);
 
         const url = new URL(req.url);
-        const pathParts = url.pathname.split('/').filter(Boolean);
+        // URL format: /functions/v1/admin-reports or /functions/v1/admin-reports/:id
+        const fullPath = url.pathname;
+        const functionPath = fullPath.replace(/^\/functions\/v1\/admin-reports\/?/, '');
+        const pathParts = functionPath.split('/').filter(Boolean);
+
+        console.log('[AdminReports] Path:', fullPath, 'Extracted parts:', pathParts);
 
         // GET /admin-reports - List all reports with filters
         if (req.method === 'GET' && pathParts.length === 0) {

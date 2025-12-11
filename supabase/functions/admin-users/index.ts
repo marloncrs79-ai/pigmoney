@@ -91,7 +91,13 @@ serve(async (req) => {
     const { user: adminUser, supabase } = await verifyAdmin(authHeader, supabaseUrl, serviceKey);
 
     const url = new URL(req.url);
-    const pathParts = url.pathname.split('/').filter(Boolean);
+    // URL format: /functions/v1/admin-users or /functions/v1/admin-users/:id
+    // We need to extract just the part after "admin-users"
+    const fullPath = url.pathname;
+    const functionPath = fullPath.replace(/^\/functions\/v1\/admin-users\/?/, '');
+    const pathParts = functionPath.split('/').filter(Boolean);
+
+    console.log('[AdminUsers] Path:', fullPath, 'Extracted parts:', pathParts);
 
     // GET /admin-users - List users with filters
     if (req.method === 'GET' && pathParts.length === 0) {

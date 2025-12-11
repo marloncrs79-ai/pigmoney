@@ -76,53 +76,44 @@ export default function AdminReports() {
         try {
             setLoading(true);
 
-            // @ts-ignore - user_reports table will exist after migration
-            let query = supabase.from('user_reports')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                toast({
+                    title: 'Erro de autenticação',
+                    description: 'Você precisa estar logado para acessar esta página.',
+                    variant: 'destructive',
+                });
+                return;
+            }
+
+            const params = new URLSearchParams({
+                page: '1',
+                limit: '100',
+            });
 
             if (statusFilter !== 'all') {
-                query = query.eq('status', statusFilter);
+                params.set('status', statusFilter);
             }
             if (impactFilter !== 'all') {
-                query = query.eq('impacto', impactFilter);
+                params.set('impacto', impactFilter);
             }
 
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            // Fetch user emails for each report
-            const reportsWithEmails = await Promise.all(
-                (data || []).map(async (report: any) => {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session) return report;
-
-                    try {
-                        // Use /admin-users/:id endpoint to get user details
-                        const response = await fetch(
-                            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/${report.user_id}`,
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${session.access_token}`,
-                                },
-                            }
-                        );
-                        if (response.ok) {
-                            const userData = await response.json();
-                            return {
-                                ...report,
-                                user_email: userData.user?.email || 'Desconhecido'
-                            };
-                        }
-                    } catch {
-                        // Ignore errors
-                    }
-                    return report;
-                })
+            const response = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reports?${params}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                }
             );
 
-            setReports(reportsWithEmails as Report[]);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Falha ao carregar reports');
+            }
+
+            const data = await response.json();
+            setReports(data.reports || []);
         } catch (error: any) {
             console.error('Error fetching reports:', error);
             toast({
@@ -143,12 +134,27 @@ export default function AdminReports() {
         try {
             setUpdating(true);
 
-            // @ts-ignore - user_reports table will exist after migration
-            const { error } = await supabase.from('user_reports')
-                .update({ status: newStatus })
-                .eq('id', reportId);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                throw new Error('Não autenticado');
+            }
 
-            if (error) throw error;
+            const response = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reports/${reportId}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Falha ao atualizar status');
+            }
 
             setReports(reports.map(r =>
                 r.id === reportId ? { ...r, status: newStatus } : r
