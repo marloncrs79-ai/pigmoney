@@ -12,41 +12,23 @@ async function verifyAdmin(authHeader: string | null, supabaseUrl: string, servi
     throw new Error('No authorization header');
   }
 
-  // Create client with service role for admin operations
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  // Get user from auth header (verifies the token)
   const token = authHeader.replace('Bearer ', '');
-  const { data: { user: jwtUser }, error: authError } = await supabase.auth.getUser(token);
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-  if (authError || !jwtUser) {
+  if (authError || !user) {
     throw new Error('Authentication failed');
   }
 
-  // Fetch fresh user data from database to ensure metadata is up-to-date
-  let dbUser;
-  try {
-    const { data, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
-    if (dbError) throw dbError;
-    dbUser = data.user;
-  } catch (err) {
-    console.warn('getUserById failed, falling back to JWT:', err);
-    dbUser = jwtUser;
-  }
-
-  if (!dbUser) {
-    throw new Error('User not found');
-  }
-
-  // Check if user is admin (check raw_user_meta_data)
-  const isAdmin = dbUser.user_metadata?.is_admin === true ||
-    dbUser.app_metadata?.is_admin === true;
+  const isAdmin = user.user_metadata?.is_admin === true ||
+    user.app_metadata?.is_admin === true;
 
   if (!isAdmin) {
     throw new Error('Forbidden: Admin access required');
   }
 
-  return { user: dbUser, supabase };
+  return { user, supabase };
 }
 
 serve(async (req) => {
