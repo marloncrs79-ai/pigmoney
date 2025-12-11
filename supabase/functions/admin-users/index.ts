@@ -56,24 +56,26 @@ async function verifyAdmin(authHeader: string | null, supabaseUrl: string, servi
   return { user: dbUser, supabase };
 }
 
-// Log admin action
-async function logAction(
+// Log admin action (fire and forget - don't block main response)
+function logAction(
   supabase: any,
   adminUserId: string,
   action: string,
   targetUserId?: string,
   metadata?: any
 ) {
-  try {
-    await supabase.rpc('log_admin_action', {
-      p_admin_user_id: adminUserId,
-      p_action: action,
-      p_target_user_id: targetUserId || null,
-      p_metadata: metadata || {},
-    });
-  } catch (error) {
-    console.error('Failed to log admin action:', error);
-  }
+  // Fire and forget - don't await
+  supabase.rpc('log_admin_action', {
+    p_admin_user_id: adminUserId,
+    p_action: action,
+    p_target_user_id: targetUserId || null,
+    p_metadata: metadata || {},
+    p_ip_address: null
+  }).then(() => {
+    console.log('[AdminUsers] Action logged:', action);
+  }).catch((error: any) => {
+    console.error('[AdminUsers] Failed to log action:', error?.message || error);
+  });
 }
 
 serve(async (req) => {
@@ -153,8 +155,8 @@ serve(async (req) => {
 
       console.log(`[AdminUsers] Users after filtering: ${users.length}`);
 
-      // Log action
-      await logAction(supabase, adminUser.id, 'list_users', undefined, {
+      // Log action (fire and forget)
+      logAction(supabase, adminUser.id, 'list_users', undefined, {
         filters: { search, provider, verified },
         page,
         limit,
