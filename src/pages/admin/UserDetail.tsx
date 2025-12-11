@@ -76,7 +76,7 @@ export default function AdminUserDetail() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/${id}/actions`, {
+            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/${id}/action`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${session.access_token}`,
@@ -87,7 +87,7 @@ export default function AdminUserDetail() {
 
             if (response.ok) {
                 toast({ title: "Sucesso", description: "Ação realizada com sucesso." });
-                if (action === 'delete') {
+                if (action === 'delete_user') {
                     navigate('/admin/users');
                 } else {
                     fetchUser();
@@ -262,7 +262,7 @@ export default function AdminUserDetail() {
                                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                                 <AlertDialogAction
                                                     className="bg-red-600 hover:bg-red-700"
-                                                    onClick={() => handleAction('delete')}
+                                                    onClick={() => handleAction('delete_user')}
                                                 >
                                                     Excluir
                                                 </AlertDialogAction>
@@ -275,7 +275,7 @@ export default function AdminUserDetail() {
                                             variant="outline"
                                             className="bg-white"
                                             size="sm"
-                                            onClick={() => handleAction('unblock')}
+                                            onClick={() => handleAction('unblock_user')}
                                             disabled={actionLoading}
                                         >
                                             <Unlock className="h-4 w-4 mr-2" />
@@ -286,7 +286,7 @@ export default function AdminUserDetail() {
                                             variant="outline"
                                             className="border-red-200 text-red-700 hover:bg-red-50"
                                             size="sm"
-                                            onClick={() => handleAction('block')}
+                                            onClick={() => handleAction('block_user')}
                                             disabled={actionLoading}
                                         >
                                             <Lock className="h-4 w-4 mr-2" />

@@ -6,60 +6,65 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Admin verification middleware
+/**
+ * Simplified admin verification - uses JWT claims only
+ */
 async function verifyAdmin(authHeader: string | null, supabaseUrl: string, serviceKey: string) {
     if (!authHeader) {
+        console.error('[AdminReports] No authorization header');
         throw new Error('No authorization header');
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
-
     const token = authHeader.replace('Bearer ', '');
+
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-        console.error('[AdminReports] Auth check failed:', authError);
+        console.error('[AdminReports] Auth failed:', authError?.message);
         throw new Error('Authentication failed');
     }
 
-    console.log('[AdminReports] Authenticated user:', user.id, user.email);
+    console.log('[AdminReports] Authenticated:', user.email);
 
-    // Check if user is admin from JWT claims
     const isAdmin = user.user_metadata?.is_admin === true ||
         user.app_metadata?.is_admin === true;
 
-    console.log('[AdminReports] Is admin:', isAdmin);
-
     if (!isAdmin) {
+        console.error('[AdminReports] Not admin. app_metadata:', user.app_metadata);
         throw new Error('Forbidden: Admin access required');
     }
 
     return { user, supabase };
 }
 
-// Log admin action
-async function logAction(
-    supabase: any,
-    adminUserId: string,
-    action: string,
-    targetUserId?: string,
-    metadata?: any
-) {
+/**
+ * Extract path parts after function name
+ */
+function extractPathParts(url: URL): string[] {
+    const fullPath = url.pathname;
+    const functionPath = fullPath.replace(/^\/functions\/v1\/admin-reports\/?/, '');
+    return functionPath.split('/').filter(Boolean);
+}
+
+/**
+ * Get user email by ID (with error handling)
+ */
+async function getUserEmail(supabase: any, userId: string): Promise<string> {
     try {
-        await supabase.rpc('log_admin_action', {
-            p_admin_user_id: adminUserId,
-            p_action: action,
-            p_target_user_id: targetUserId || null,
-            p_metadata: metadata || {},
-        });
-    } catch (error) {
-        console.error('Failed to log admin action:', error);
+        const { data, error } = await supabase.auth.admin.getUserById(userId);
+        if (error || !data?.user) return 'Desconhecido';
+        return data.user.email || 'Desconhecido';
+    } catch {
+        return 'Desconhecido';
     }
 }
 
 serve(async (req) => {
+    console.log('[AdminReports] Request:', req.method, req.url);
+
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+        return new Response('ok', { headers: corsHeaders });
     }
 
     try {
@@ -67,17 +72,16 @@ serve(async (req) => {
         const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const authHeader = req.headers.get('Authorization');
 
-        const { user: adminUser, supabase } = await verifyAdmin(authHeader, supabaseUrl, serviceKey);
+        const { supabase } = await verifyAdmin(authHeader, supabaseUrl, serviceKey);
 
         const url = new URL(req.url);
-        // URL format: /functions/v1/admin-reports or /functions/v1/admin-reports/:id
-        const fullPath = url.pathname;
-        const functionPath = fullPath.replace(/^\/functions\/v1\/admin-reports\/?/, '');
-        const pathParts = functionPath.split('/').filter(Boolean);
+        const pathParts = extractPathParts(url);
 
-        console.log('[AdminReports] Path:', fullPath, 'Extracted parts:', pathParts);
+        console.log('[AdminReports] Path parts:', pathParts, 'Method:', req.method);
 
-        // GET /admin-reports - List all reports with filters
+        // ========================================
+        // GET /admin-reports - List all reports
+        // ========================================
         if (req.method === 'GET' && pathParts.length === 0) {
             const page = parseInt(url.searchParams.get('page') || '1');
             const limit = parseInt(url.searchParams.get('limit') || '50');
@@ -86,6 +90,9 @@ serve(async (req) => {
 
             const offset = (page - 1) * limit;
 
+            console.log('[AdminReports] Listing reports - page:', page, 'limit:', limit, 'status:', status, 'impacto:', impacto);
+
+            // Build query
             let query = supabase
                 .from('user_reports')
                 .select('*', { count: 'exact' })
@@ -101,22 +108,17 @@ serve(async (req) => {
 
             const { data, error, count } = await query;
 
-            if (error) throw error;
+            if (error) {
+                console.error('[AdminReports] Query error:', error);
+                throw new Error('Failed to fetch reports: ' + error.message);
+            }
+
+            console.log('[AdminReports] Raw reports count:', data?.length || 0, 'Total:', count);
 
             // Enrich with user emails
             const enrichedReports = await Promise.all(
                 (data || []).map(async (report: any) => {
-                    let userEmail = 'Desconhecido';
-
-                    if (report.user_id) {
-                        try {
-                            const { data: userData } = await supabase.auth.admin.getUserById(report.user_id);
-                            userEmail = userData?.user?.email || 'Desconhecido';
-                        } catch {
-                            // Ignore errors
-                        }
-                    }
-
+                    const userEmail = await getUserEmail(supabase, report.user_id);
                     return {
                         ...report,
                         user_email: userEmail,
@@ -124,11 +126,7 @@ serve(async (req) => {
                 })
             );
 
-            await logAction(supabase, adminUser.id, 'list_reports', undefined, {
-                filters: { status, impacto },
-                page,
-                limit,
-            });
+            console.log('[AdminReports] Returning', enrichedReports.length, 'reports');
 
             return new Response(
                 JSON.stringify({
@@ -141,13 +139,86 @@ serve(async (req) => {
             );
         }
 
+        // ========================================
+        // GET /admin-reports/stats - Get statistics
+        // ========================================
+        if (req.method === 'GET' && pathParts.length === 1 && pathParts[0] === 'stats') {
+            console.log('[AdminReports] Getting statistics');
+
+            const { data, error, count } = await supabase
+                .from('user_reports')
+                .select('status, impacto', { count: 'exact' });
+
+            if (error) {
+                throw new Error('Failed to fetch stats: ' + error.message);
+            }
+
+            const statusCounts: Record<string, number> = {};
+            const impactoCounts: Record<string, number> = {};
+
+            (data || []).forEach((report: any) => {
+                statusCounts[report.status] = (statusCounts[report.status] || 0) + 1;
+                impactoCounts[report.impacto] = (impactoCounts[report.impacto] || 0) + 1;
+            });
+
+            return new Response(
+                JSON.stringify({
+                    total: count || 0,
+                    by_status: statusCounts,
+                    by_impacto: impactoCounts,
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
+        // ========================================
+        // GET /admin-reports/:id - Get single report
+        // ========================================
+        if (req.method === 'GET' && pathParts.length === 1) {
+            const reportId = pathParts[0];
+            console.log('[AdminReports] Getting report:', reportId);
+
+            const { data, error } = await supabase
+                .from('user_reports')
+                .select('*')
+                .eq('id', reportId)
+                .single();
+
+            if (error) {
+                console.error('[AdminReports] Query error:', error);
+                throw new Error('Report not found');
+            }
+
+            const userEmail = await getUserEmail(supabase, data.user_id);
+
+            return new Response(
+                JSON.stringify({
+                    report: {
+                        ...data,
+                        user_email: userEmail,
+                    }
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
+        // ========================================
         // PATCH /admin-reports/:id - Update report status
+        // ========================================
         if (req.method === 'PATCH' && pathParts.length === 1) {
             const reportId = pathParts[0];
-            const { status } = await req.json();
+            const body = await req.json();
+            const { status } = body;
 
-            if (!status || !['Novo', 'Em análise', 'Resolvido'].includes(status)) {
-                throw new Error('Invalid status. Must be: Novo, Em análise, or Resolvido');
+            console.log('[AdminReports] Updating report:', reportId, 'to status:', status);
+
+            if (!status) {
+                throw new Error('Status is required');
+            }
+
+            const validStatuses = ['pendente', 'em_analise', 'resolvido', 'fechado'];
+            if (!validStatuses.includes(status)) {
+                throw new Error('Invalid status. Valid options: ' + validStatuses.join(', '));
             }
 
             const { data, error } = await supabase
@@ -157,65 +228,41 @@ serve(async (req) => {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('[AdminReports] Update error:', error);
+                throw new Error('Failed to update report: ' + error.message);
+            }
 
-            await logAction(supabase, adminUser.id, 'update_report_status', data.user_id, {
-                report_id: reportId,
-                new_status: status,
-            });
+            console.log('[AdminReports] Updated report:', data.id);
 
             return new Response(
-                JSON.stringify({ success: true, report: data }),
+                JSON.stringify({
+                    success: true,
+                    report: data,
+                }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }
 
-        // GET /admin-reports/stats - Get report statistics
-        if (req.method === 'GET' && pathParts.length === 1 && pathParts[0] === 'stats') {
-            const { data, error } = await supabase
-                .from('user_reports')
-                .select('status, impacto');
-
-            if (error) throw error;
-
-            const stats = {
-                total: data?.length || 0,
-                by_status: {
-                    'Novo': data?.filter((r: any) => r.status === 'Novo').length || 0,
-                    'Em análise': data?.filter((r: any) => r.status === 'Em análise').length || 0,
-                    'Resolvido': data?.filter((r: any) => r.status === 'Resolvido').length || 0,
-                },
-                by_impacto: {
-                    'Crítico': data?.filter((r: any) => r.impacto === 'Crítico').length || 0,
-                    'Alto': data?.filter((r: any) => r.impacto === 'Alto').length || 0,
-                    'Médio': data?.filter((r: any) => r.impacto === 'Médio').length || 0,
-                    'Baixo': data?.filter((r: any) => r.impacto === 'Baixo').length || 0,
-                },
-                critical_pending: data?.filter((r: any) =>
-                    r.impacto === 'Crítico' && r.status !== 'Resolvido'
-                ).length || 0,
-            };
-
-            return new Response(
-                JSON.stringify(stats),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-        }
-
+        // No matching route
+        console.error('[AdminReports] No route matched:', req.method, pathParts);
         throw new Error('Not found');
 
-    } catch (error) {
-        console.error('Admin Reports Error:', error);
+    } catch (error: unknown) {
+        const err = error as Error;
+        console.error('[AdminReports] Error:', err.message);
 
-        const status = error.message.includes('Forbidden') ? 403 :
-            error.message.includes('Authentication') ? 401 : 400;
+        const status = err.message.includes('Forbidden') ? 403 :
+            err.message.includes('Authentication') ? 401 :
+                err.message.includes('not found') ? 404 :
+                    err.message.includes('Invalid') ? 400 : 500;
 
         return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ error: err.message }),
             {
                 status,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             }
         );
     }
-})
+});
