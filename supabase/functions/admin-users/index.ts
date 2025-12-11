@@ -197,7 +197,7 @@ serve(async (req) => {
 
       if (error) throw error;
 
-      await logAction(supabase, adminUser.id, 'view_user_details', userId);
+      logAction(supabase, adminUser.id, 'view_user_details', userId);
 
       return new Response(
         JSON.stringify({
@@ -236,7 +236,7 @@ serve(async (req) => {
 
           if (error) throw error;
 
-          await logAction(supabase, adminUser.id, 'reset_password', userId, { email: params.email });
+          logAction(supabase, adminUser.id, 'reset_password', userId, { email: params.email });
 
           return new Response(
             JSON.stringify({ success: true, reset_link: data.properties.action_link }),
@@ -251,7 +251,7 @@ serve(async (req) => {
 
           if (error) throw error;
 
-          await logAction(supabase, adminUser.id, 'verify_email', userId);
+          logAction(supabase, adminUser.id, 'verify_email', userId);
 
           return new Response(
             JSON.stringify({ success: true }),
@@ -266,7 +266,7 @@ serve(async (req) => {
 
           if (error) throw error;
 
-          await logAction(supabase, adminUser.id, 'block_user', userId);
+          logAction(supabase, adminUser.id, 'block_user', userId);
 
           return new Response(
             JSON.stringify({ success: true }),
@@ -281,7 +281,7 @@ serve(async (req) => {
 
           if (error) throw error;
 
-          await logAction(supabase, adminUser.id, 'unblock_user', userId);
+          logAction(supabase, adminUser.id, 'unblock_user', userId);
 
           return new Response(
             JSON.stringify({ success: true }),
@@ -294,7 +294,7 @@ serve(async (req) => {
 
           if (error) throw error;
 
-          await logAction(supabase, adminUser.id, 'delete_user', userId);
+          logAction(supabase, adminUser.id, 'delete_user', userId);
 
           return new Response(
             JSON.stringify({ success: true }),
@@ -309,7 +309,7 @@ serve(async (req) => {
 
           if (error) throw error;
 
-          await logAction(supabase, adminUser.id, 'make_admin', userId);
+          logAction(supabase, adminUser.id, 'make_admin', userId);
 
           return new Response(
             JSON.stringify({ success: true }),
@@ -324,7 +324,7 @@ serve(async (req) => {
 
           if (error) throw error;
 
-          await logAction(supabase, adminUser.id, 'remove_admin', userId);
+          logAction(supabase, adminUser.id, 'remove_admin', userId);
 
           return new Response(
             JSON.stringify({ success: true }),
