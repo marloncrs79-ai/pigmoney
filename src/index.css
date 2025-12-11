@@ -1197,8 +1197,8 @@
   @apply bg-primary text-primary-foreground;
   @apply w-14 h-14;
   @apply transition-all duration-200 ease-out;
-  right: 16px;
-  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  right: 24px;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 
 .fab:active {
@@ -1369,6 +1369,7 @@
 
 /* Prevent zoom on iOS when focusing inputs */
 @media screen and (max-width: 768px) {
+
   input[type="text"],
   input[type="email"],
   input[type="number"],
@@ -1443,12 +1444,10 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    hsl(var(--foreground) / 0.05) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      hsl(var(--foreground) / 0.05) 50%,
+      transparent 100%);
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
@@ -1456,6 +1455,7 @@
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
