@@ -29,7 +29,8 @@ serve(async (req) => {
     try {
         const body = await req.text();
         console.log('Body length:', body.length);
-        event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+        // Use async version for Deno runtime
+        event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret);
         console.log('Signature verification SUCCESS');
     } catch (err: any) {
         console.error('Signature verification FAILED:', err.message);
