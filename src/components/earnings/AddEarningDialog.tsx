@@ -62,7 +62,7 @@ export function AddEarningDialog({ trigger }: AddEarningDialogProps) {
                             <Input
                                 id="amount"
                                 placeholder="0,00"
-                                className="pl-9 text-lg font-semibold"
+                                className="pl-9 text-lg font-semibold input-mobile h-12"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 type="number"

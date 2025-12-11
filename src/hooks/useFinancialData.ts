@@ -777,6 +777,14 @@ export function useMonthlyProjection() {
     };
   });
 
+  const isLoading = [
+    useFixedExpenses,
+    useIncome,
+    useCardTransactions,
+    useVariableExpenses,
+    usePiggyBanks
+  ].some(hook => hook().isLoading);
+
   return {
     projections,
     summary: {
@@ -786,6 +794,7 @@ export function useMonthlyProjection() {
       monthlyIncome,
       baseAmount,
       piggyBankBalance: totalPiggyBankBalance
-    }
+    },
+    isLoading
   };
 }

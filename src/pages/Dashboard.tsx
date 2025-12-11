@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,7 +17,7 @@ const COLORS = ['hsl(221, 83%, 53%)', 'hsl(173, 58%, 39%)', 'hsl(142, 71%, 45%)'
 const EARNINGS_COLOR = 'hsl(142, 71%, 45%)';
 
 export default function Dashboard() {
-  const { projections, summary } = useMonthlyProjection();
+  const { projections, summary, isLoading } = useMonthlyProjection();
   const { data: fixedExpenses = [] } = useFixedExpenses();
   const { data: variableExpenses = [] } = useVariableExpenses();
   const { data: cards = [] } = useCreditCards();
@@ -54,6 +55,14 @@ export default function Dashboard() {
     Saldo: p.balance
   }));
 
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <PageSkeleton variant="dashboard" />
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <PageHeader
@@ -63,7 +72,7 @@ export default function Dashboard() {
       />
 
       {/* Primary Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 mb-6">
+      <div className="grid-mobile-2 gap-mobile mb-6">
         <StatCard
           title="Receita Mensal"
           value={summary.monthlyIncome + earningsStats.totalMonth}
@@ -115,7 +124,7 @@ export default function Dashboard() {
       )}
 
       {/* Balance Projection */}
-      <div className="mt-4 sm:mt-6 grid gap-4 sm:gap-6 lg:grid-cols-2">
+      <div className="mt-4 sm:mt-6 grid grid-cols-1 lg:grid-cols-2 gap-mobile">
         <Card>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
             <CardTitle className="flex items-center gap-2">
@@ -188,7 +197,7 @@ export default function Dashboard() {
           <CardContent>
             {categoryData.length > 0 ? (
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="h-40 w-40 sm:h-48 sm:w-48 flex-shrink-0">
+                <div className="h-48 w-full sm:w-48 flex-shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -234,7 +243,7 @@ export default function Dashboard() {
           <CardTitle>Projeção dos Próximos 6 Meses</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-56 sm:h-72 overflow-x-auto">
+          <div className="h-64 sm:h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />

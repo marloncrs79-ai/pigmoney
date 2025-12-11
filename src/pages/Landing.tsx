@@ -1,14 +1,14 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PricingCard } from '@/components/PricingCard';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
     PiggyBank,
     TrendingUp,
     ArrowRight,
-    CheckCircle2,
     Star,
     Wallet,
     LayoutDashboard,
@@ -17,7 +17,6 @@ import {
     CreditCard,
     Target,
     Sparkles,
-    Shield,
     Zap,
     ChevronLeft,
     ChevronRight,
@@ -29,7 +28,9 @@ import {
     Clock,
     Lock,
     Smartphone,
-    Play
+    Play,
+    Menu,
+    X
 } from "lucide-react";
 
 // Lazy load heavy components
@@ -146,6 +147,7 @@ export default function Landing() {
     const { user } = useAuth();
     const [currentTestimonial, setCurrentTestimonial] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Auto-rotate testimonials
     useEffect(() => {
@@ -166,78 +168,136 @@ export default function Landing() {
         setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
     };
 
+    const scrollToSection = (id: string) => {
+        setMobileMenuOpen(false);
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     return (
         <div className="min-h-screen bg-background flex flex-col font-sans overflow-x-hidden">
-            {/* Navbar */}
-            <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-lg">
-                            <PiggyBank className="h-6 w-6" />
+            {/* Navbar - Mobile-first optimized */}
+            <nav className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-md safe-area-inset-top">
+                <div className="container mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
+                    <Link to="/" className="flex items-center gap-2">
+                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-lg">
+                            <PiggyBank className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight text-foreground">PIGMONEY</span>
+                        <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">PIGMONEY</span>
+                    </Link>
+
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-muted-foreground">
+                        <button onClick={() => scrollToSection('como-funciona')} className="hover:text-primary transition-colors touch-target">Como Funciona</button>
+                        <button onClick={() => scrollToSection('funcionalidades')} className="hover:text-primary transition-colors touch-target">Funcionalidades</button>
+                        <button onClick={() => scrollToSection('depoimentos')} className="hover:text-primary transition-colors touch-target">Depoimentos</button>
+                        <button onClick={() => scrollToSection('precos')} className="hover:text-primary transition-colors touch-target">Preços</button>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-                        <a href="#como-funciona" className="hover:text-primary transition-colors">Como Funciona</a>
-                        <a href="#funcionalidades" className="hover:text-primary transition-colors">Funcionalidades</a>
-                        <a href="#depoimentos" className="hover:text-primary transition-colors">Depoimentos</a>
-                        <a href="#precos" className="hover:text-primary transition-colors">Preços</a>
-                    </div>
-
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         {user ? (
-                            <Button onClick={() => navigate('/dashboard')} className="gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
+                            <Button onClick={() => navigate('/dashboard')} className="gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 h-10 sm:h-10 text-sm">
                                 <LayoutDashboard className="h-4 w-4" />
-                                Dashboard
+                                <span className="hidden sm:inline">Dashboard</span>
                             </Button>
                         ) : (
                             <>
-                                <Button variant="ghost" onClick={() => navigate('/auth')} className="hidden sm:flex">
+                                <Button variant="ghost" onClick={() => navigate('/auth')} className="hidden sm:flex h-10">
                                     Entrar
                                 </Button>
-                                <Button onClick={() => navigate('/auth?signup=true')} className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
-                                    Começar Grátis
+                                <Button onClick={() => navigate('/auth?signup=true')} className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 h-10 text-sm px-4 sm:px-6">
+                                    <span className="hidden sm:inline">Começar Grátis</span>
+                                    <span className="sm:hidden">Começar</span>
                                 </Button>
                             </>
                         )}
+
+                        {/* Mobile Menu Button */}
+                        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="md:hidden h-10 w-10 rounded-xl touch-target">
+                                    <Menu className="h-5 w-5" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="w-[280px] p-0">
+                                <div className="flex flex-col h-full">
+                                    <div className="flex items-center justify-between p-4 border-b border-border">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white">
+                                                <PiggyBank className="h-4 w-4" />
+                                            </div>
+                                            <span className="font-bold">PIGMONEY</span>
+                                        </div>
+                                    </div>
+                                    <nav className="flex-1 p-4 space-y-2">
+                                        <button onClick={() => scrollToSection('como-funciona')} className="w-full text-left px-4 py-3 rounded-xl hover:bg-muted transition-colors touch-target font-medium">
+                                            Como Funciona
+                                        </button>
+                                        <button onClick={() => scrollToSection('funcionalidades')} className="w-full text-left px-4 py-3 rounded-xl hover:bg-muted transition-colors touch-target font-medium">
+                                            Funcionalidades
+                                        </button>
+                                        <button onClick={() => scrollToSection('depoimentos')} className="w-full text-left px-4 py-3 rounded-xl hover:bg-muted transition-colors touch-target font-medium">
+                                            Depoimentos
+                                        </button>
+                                        <button onClick={() => scrollToSection('precos')} className="w-full text-left px-4 py-3 rounded-xl hover:bg-muted transition-colors touch-target font-medium">
+                                            Preços
+                                        </button>
+                                    </nav>
+                                    <div className="p-4 border-t border-border space-y-3">
+                                        {!user && (
+                                            <>
+                                                <Button variant="outline" className="w-full h-12 touch-target" onClick={() => { setMobileMenuOpen(false); navigate('/auth'); }}>
+                                                    Entrar
+                                                </Button>
+                                                <Button className="w-full h-12 touch-target bg-gradient-to-r from-green-500 to-green-600" onClick={() => { setMobileMenuOpen(false); navigate('/auth?signup=true'); }}>
+                                                    Começar Grátis
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
                 </div>
             </nav>
 
-            {/* Hero Section */}
-            <section className="relative overflow-hidden pt-16 pb-24 lg:pt-28 lg:pb-32">
-                {/* Background Effects */}
-                <div className="absolute inset-0 -z-10">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500/20 rounded-full blur-3xl" />
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
+            {/* Hero Section - Mobile-first optimized */}
+            <section className="relative overflow-hidden py-12 sm:pt-16 sm:pb-24 lg:pt-24 lg:pb-32">
+                {/* Background Effects - Simplified on mobile for performance */}
+                <div className="absolute inset-0 -z-10 hidden sm:block">
+                    <div className="absolute top-0 left-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-green-500/15 rounded-full blur-3xl" />
+                    <div className="absolute bottom-0 right-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-emerald-500/15 rounded-full blur-3xl" />
                 </div>
 
                 <div className="container px-4 mx-auto">
                     <div className="text-center max-w-5xl mx-auto">
                         {/* Badge */}
-                        <div className="inline-flex items-center rounded-full border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm font-medium text-green-600 mb-8 animate-pulse">
-                            <Sparkles className="h-4 w-4 mr-2" />
-                            Novo: Consultor Pig com Inteligência Artificial
+                        <div className="inline-flex items-center rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-green-600 mb-6 sm:mb-8">
+                            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                            <span className="hidden sm:inline">Novo: Consultor Pig com Inteligência Artificial</span>
+                            <span className="sm:hidden">Novo: Consultor Pig com IA</span>
                         </div>
 
-                        {/* Main Headline - Visceral Copy */}
-                        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight text-foreground mb-6 leading-[1.1]">
-                            Chega de terminar o mês <br className="hidden sm:block" />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-500">sem saber pra onde foi seu dinheiro.</span>
+                        {/* Main Headline - Mobile-first typography */}
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-foreground mb-4 sm:mb-6 leading-[1.15]">
+                            Chega de terminar o mês{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-500">
+                                sem saber pra onde foi seu dinheiro.
+                            </span>
                         </h1>
 
-                        <p className="text-xl sm:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
+                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-2">
                             O PigMoney é o app financeiro que <strong className="text-foreground">finalmente funciona</strong>.
-                            Simples de usar, bonito de ver e inteligente o suficiente para te mostrar
+                            <span className="hidden sm:inline"> Simples de usar, bonito de ver e inteligente o suficiente para te mostrar</span>
+                            <span className="sm:hidden"> Inteligente o suficiente para te mostrar</span>
                             <span className="text-green-500 font-semibold"> onde você está errando</span>.
                         </p>
 
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                        {/* CTA Buttons - Larger touch targets on mobile */}
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
                             <Button
                                 size="lg"
-                                className="text-lg px-8 py-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-xl shadow-green-500/25 group"
+                                className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 h-14 sm:h-14 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-xl shadow-green-500/25 group touch-target"
                                 onClick={() => navigate('/auth?signup=true')}
                             >
                                 Começar Grátis Agora
@@ -246,44 +306,46 @@ export default function Landing() {
                             <Button
                                 size="lg"
                                 variant="outline"
-                                className="text-lg px-8 py-6"
-                                onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+                                className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 h-14 sm:h-14 touch-target"
+                                onClick={() => scrollToSection('como-funciona')}
                             >
                                 <Play className="mr-2 h-5 w-5" />
                                 Ver Como Funciona
                             </Button>
                         </div>
 
-                        <p className="text-sm text-muted-foreground">
-                            ✓ Grátis para sempre no plano básico &nbsp;&nbsp; ✓ Sem cartão de crédito &nbsp;&nbsp; ✓ Cancele quando quiser
+                        <p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+                            <span className="flex items-center gap-1"><span className="text-green-500">✓</span> Grátis para sempre</span>
+                            <span className="flex items-center gap-1"><span className="text-green-500">✓</span> Sem cartão</span>
+                            <span className="flex items-center gap-1"><span className="text-green-500">✓</span> Cancele quando quiser</span>
                         </p>
 
-                        {/* Hero Dashboard Preview with Pig Mascot */}
-                        <div className="mt-16 relative mx-auto max-w-6xl">
-                            {/* Floating Pig Mascot */}
-                            <div className="absolute -top-8 -left-4 sm:-top-16 sm:-left-16 z-20">
-                                <div className="relative animate-bounce" style={{ animationDuration: '3s' }}>
-                                    <div className="absolute inset-0 bg-green-500/40 blur-2xl rounded-full scale-150" />
-                                    <div className="relative h-20 w-20 sm:h-28 sm:w-28 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center shadow-2xl transform -rotate-12 hover:rotate-0 transition-transform duration-300 border-4 border-white/30">
-                                        <PiggyBank className="h-10 w-10 sm:h-14 sm:w-14 text-white" />
+                        {/* Hero Dashboard Preview - Optimized for mobile */}
+                        <div className="mt-10 sm:mt-16 relative mx-auto max-w-6xl">
+                            {/* Floating Pig Mascot - Hide on small mobile */}
+                            <div className="absolute -top-6 -left-2 sm:-top-12 sm:-left-12 z-20 hidden xs:block">
+                                <div className="relative" style={{ animation: 'float 4s ease-in-out infinite' }}>
+                                    <div className="absolute inset-0 bg-green-500/30 blur-2xl rounded-full scale-150 hidden sm:block" />
+                                    <div className="relative h-14 w-14 sm:h-20 sm:w-20 md:h-24 md:w-24 bg-gradient-to-br from-green-400 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl transform -rotate-12 hover:rotate-0 transition-transform duration-300 border-2 sm:border-4 border-white/30">
+                                        <PiggyBank className="h-7 w-7 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white" />
                                     </div>
-                                    {/* Coins */}
-                                    <div className="absolute -top-2 -right-2 h-6 w-6 bg-yellow-400 rounded-full border-2 border-yellow-200 shadow-lg animate-bounce" style={{ animationDelay: '0.5s' }} />
-                                    <div className="absolute -bottom-1 -left-3 h-5 w-5 bg-yellow-400 rounded-full border-2 border-yellow-200 shadow-lg animate-bounce" style={{ animationDelay: '1s' }} />
                                 </div>
                             </div>
 
-                            {/* Speech Bubble */}
-                            <div className="absolute -top-4 left-16 sm:left-20 z-20 hidden sm:block">
-                                <div className="bg-white dark:bg-gray-800 rounded-xl px-4 py-2 shadow-lg border border-border">
+                            {/* Speech Bubble - Only show on tablets+ */}
+                            <div className="absolute -top-4 left-16 z-20 hidden md:block">
+                                <div className="bg-card rounded-xl px-4 py-2 shadow-lg border border-border">
                                     <p className="text-sm font-medium text-foreground">Bora organizar suas finanças? 🐷</p>
                                 </div>
                             </div>
 
-                            <div className="transform transition-all duration-500 hover:scale-[1.01]">
+                            <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-border/50">
                                 <Suspense fallback={
-                                    <div className="h-[400px] md:h-[600px] w-full rounded-3xl border border-border/40 bg-card/50 backdrop-blur animate-pulse flex items-center justify-center">
-                                        <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
+                                    <div className="h-[280px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full bg-card flex items-center justify-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 text-primary animate-spin" />
+                                            <p className="text-sm text-muted-foreground">Carregando preview...</p>
+                                        </div>
                                     </div>
                                 }>
                                     <HeroDashboardPreview />
@@ -294,68 +356,68 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Social Proof Numbers */}
-            <section className="py-12 bg-gradient-to-r from-green-500/5 via-emerald-500/5 to-green-500/5 border-y border-green-500/10">
+            {/* Social Proof Numbers - Compact on mobile */}
+            <section className="py-8 sm:py-12 bg-gradient-to-r from-green-500/5 via-emerald-500/5 to-green-500/5 border-y border-green-500/10">
                 <div className="container px-4 mx-auto">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        <StatItem value="+10.000" label="Usuários Ativos" icon={<Zap className="h-5 w-5" />} />
-                        <StatItem value="R$ 2M+" label="Já Economizados" icon={<Wallet className="h-5 w-5" />} />
-                        <StatItem value="50.000+" label="Metas Criadas" icon={<Target className="h-5 w-5" />} />
-                        <StatItem value="4.9/5" label="Avaliação Média" icon={<Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />} />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 text-center">
+                        <StatItem value="+10.000" label="Usuários Ativos" icon={<Zap className="h-4 w-4 sm:h-5 sm:w-5" />} />
+                        <StatItem value="R$ 2M+" label="Já Economizados" icon={<Wallet className="h-4 w-4 sm:h-5 sm:w-5" />} />
+                        <StatItem value="50.000+" label="Metas Criadas" icon={<Target className="h-4 w-4 sm:h-5 sm:w-5" />} />
+                        <StatItem value="4.9/5" label="Avaliação Média" icon={<Star className="h-4 w-4 sm:h-5 sm:w-5 fill-yellow-400 text-yellow-400" />} />
                     </div>
                 </div>
             </section>
 
-            {/* How It Works Section */}
-            <section id="como-funciona" className="py-24 bg-muted/30">
+            {/* How It Works Section - Mobile optimized */}
+            <section id="como-funciona" className="py-16 sm:py-24 bg-muted/30">
                 <div className="container px-4 mx-auto">
-                    <div className="text-center max-w-3xl mx-auto mb-16">
-                        <span className="text-green-500 font-semibold text-sm uppercase tracking-wider">Simples assim</span>
-                        <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mt-4 mb-6">
+                    <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
+                        <span className="text-green-500 font-semibold text-xs sm:text-sm uppercase tracking-wider">Simples assim</span>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-3 sm:mt-4 mb-4 sm:mb-6">
                             Como o PigMoney funciona?
                         </h2>
-                        <p className="text-lg text-muted-foreground">
+                        <p className="text-base sm:text-lg text-muted-foreground px-2">
                             Em 3 passos simples, você sai do caos financeiro para o controle total.
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto">
                         <StepCard
                             number="1"
                             title="Configure seu Perfil"
-                            description="Cadastre seu salário, cartões e despesas fixas. Leva menos de 5 minutos e você faz isso só uma vez."
-                            icon={<Calculator className="h-6 w-6" />}
+                            description="Cadastre seu salário, cartões e despesas fixas. Leva menos de 5 minutos."
+                            icon={<Calculator className="h-5 w-5 sm:h-6 sm:w-6" />}
                         />
                         <StepCard
                             number="2"
                             title="Registre seus Gastos"
-                            description="Adicione seus gastos diários em segundos. O app categoriza automaticamente e calcula tudo pra você."
-                            icon={<Receipt className="h-6 w-6" />}
+                            description="Adicione gastos diários em segundos. O app categoriza automaticamente."
+                            icon={<Receipt className="h-5 w-5 sm:h-6 sm:w-6" />}
                         />
                         <StepCard
                             number="3"
                             title="Veja a Mágica Acontecer"
-                            description="Visualize gráficos claros, receba alertas inteligentes e veja seu dinheiro crescer mês após mês."
-                            icon={<TrendingUp className="h-6 w-6" />}
+                            description="Visualize gráficos claros e receba alertas inteligentes."
+                            icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />}
                         />
                     </div>
                 </div>
             </section>
 
-            {/* Features Grid */}
-            <section id="funcionalidades" className="py-24">
+            {/* Features Grid - Mobile optimized */}
+            <section id="funcionalidades" className="py-16 sm:py-24">
                 <div className="container px-4 mx-auto">
-                    <div className="text-center max-w-3xl mx-auto mb-16">
-                        <span className="text-green-500 font-semibold text-sm uppercase tracking-wider">Tudo que você precisa</span>
-                        <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mt-4 mb-6">
+                    <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
+                        <span className="text-green-500 font-semibold text-xs sm:text-sm uppercase tracking-wider">Tudo que você precisa</span>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-3 sm:mt-4 mb-4 sm:mb-6">
                             Funcionalidades que fazem a diferença
                         </h2>
-                        <p className="text-lg text-muted-foreground">
-                            Cada detalhe foi pensado para tornar sua vida financeira mais simples e organizada.
+                        <p className="text-base sm:text-lg text-muted-foreground px-2">
+                            Cada detalhe foi pensado para tornar sua vida financeira mais simples.
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
                         {features.map((feature, index) => (
                             <FeatureCard key={index} {...feature} />
                         ))}
@@ -363,74 +425,75 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Testimonials Carousel */}
-            <section id="depoimentos" className="py-24 bg-gradient-to-b from-muted/50 to-background">
+            {/* Testimonials Carousel - Mobile optimized */}
+            <section id="depoimentos" className="py-16 sm:py-24 bg-gradient-to-b from-muted/50 to-background">
                 <div className="container px-4 mx-auto">
-                    <div className="text-center max-w-3xl mx-auto mb-16">
-                        <span className="text-green-500 font-semibold text-sm uppercase tracking-wider">Depoimentos reais</span>
-                        <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mt-4 mb-6">
+                    <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
+                        <span className="text-green-500 font-semibold text-xs sm:text-sm uppercase tracking-wider">Depoimentos reais</span>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-3 sm:mt-4 mb-4 sm:mb-6">
                             Quem usa, recomenda.
                         </h2>
-                        <p className="text-lg text-muted-foreground">
+                        <p className="text-base sm:text-lg text-muted-foreground px-2">
                             Veja o que nossos usuários têm a dizer sobre a transformação financeira que viveram.
                         </p>
                     </div>
 
-                    {/* Testimonial Carousel */}
+                    {/* Testimonial Carousel - Touch friendly */}
                     <div className="max-w-4xl mx-auto">
-                        <div className="relative bg-card rounded-3xl border border-border shadow-2xl p-8 md:p-12">
+                        <div className="relative bg-card rounded-2xl sm:rounded-3xl border border-border shadow-xl sm:shadow-2xl p-5 sm:p-8 md:p-12">
                             {/* Quote Icon */}
-                            <div className="absolute -top-6 left-8">
-                                <div className="h-12 w-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <Quote className="h-6 w-6 text-white" />
+                            <div className="absolute -top-4 sm:-top-6 left-6 sm:left-8">
+                                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                                    <Quote className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                 </div>
                             </div>
 
                             {/* Testimonial Content */}
-                            <div className="pt-4">
-                                <div className="flex items-center gap-4 mb-6">
+                            <div className="pt-3 sm:pt-4">
+                                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                                     <img
                                         src={testimonials[currentTestimonial].image}
                                         alt={testimonials[currentTestimonial].name}
-                                        className="h-16 w-16 rounded-full object-cover border-4 border-green-500/20"
+                                        className="h-12 w-12 sm:h-16 sm:w-16 rounded-full object-cover border-3 sm:border-4 border-green-500/20"
                                     />
                                     <div>
-                                        <h4 className="font-bold text-lg text-foreground">{testimonials[currentTestimonial].name}</h4>
-                                        <p className="text-muted-foreground">{testimonials[currentTestimonial].role}</p>
-                                        <div className="flex gap-1 mt-1">
+                                        <h4 className="font-bold text-base sm:text-lg text-foreground">{testimonials[currentTestimonial].name}</h4>
+                                        <p className="text-sm sm:text-base text-muted-foreground">{testimonials[currentTestimonial].role}</p>
+                                        <div className="flex gap-0.5 sm:gap-1 mt-1">
                                             {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
-                                                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star key={i} className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
                                             ))}
                                         </div>
                                     </div>
                                 </div>
 
-                                <blockquote className="text-xl md:text-2xl text-foreground/90 leading-relaxed italic">
+                                <blockquote className="text-base sm:text-xl md:text-2xl text-foreground/90 leading-relaxed italic">
                                     "{testimonials[currentTestimonial].quote}"
                                 </blockquote>
                             </div>
 
-                            {/* Navigation */}
-                            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-                                <div className="flex gap-2">
+                            {/* Navigation - Larger touch targets on mobile */}
+                            <div className="flex items-center justify-between mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border">
+                                <div className="flex gap-1.5 sm:gap-2">
                                     {testimonials.map((_, index) => (
                                         <button
                                             key={index}
                                             onClick={() => { setIsAutoPlaying(false); setCurrentTestimonial(index); }}
                                             className={cn(
-                                                "h-2 rounded-full transition-all duration-300",
+                                                "h-2 sm:h-2.5 rounded-full transition-all duration-300 touch-target",
                                                 index === currentTestimonial
-                                                    ? "w-8 bg-green-500"
-                                                    : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                                                    ? "w-6 sm:w-8 bg-green-500"
+                                                    : "w-2 sm:w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                                             )}
+                                            aria-label={`Ver depoimento ${index + 1}`}
                                         />
                                     ))}
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button variant="outline" size="icon" onClick={prevTestimonial}>
+                                    <Button variant="outline" size="icon" onClick={prevTestimonial} className="h-10 w-10 sm:h-10 sm:w-10 rounded-xl touch-target">
                                         <ChevronLeft className="h-5 w-5" />
                                     </Button>
-                                    <Button variant="outline" size="icon" onClick={nextTestimonial}>
+                                    <Button variant="outline" size="icon" onClick={nextTestimonial} className="h-10 w-10 sm:h-10 sm:w-10 rounded-xl touch-target">
                                         <ChevronRight className="h-5 w-5" />
                                     </Button>
                                 </div>
@@ -668,46 +731,46 @@ export default function Landing() {
     );
 }
 
-// Component: Step Card
+// Component: Step Card - Mobile optimized
 function StepCard({ number, title, description, icon }: { number: string, title: string, description: string, icon: React.ReactNode }) {
     return (
-        <div className="relative p-6 rounded-2xl bg-card border border-border shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
-            <div className="absolute -top-4 -left-4 h-12 w-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+        <div className="relative p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-card border border-border shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+            <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg">
                 {number}
             </div>
-            <div className="pt-4">
-                <div className="mb-4 inline-flex p-3 rounded-xl bg-green-500/10 text-green-500">
+            <div className="pt-3 sm:pt-4">
+                <div className="mb-3 sm:mb-4 inline-flex p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-green-500/10 text-green-500">
                     {icon}
                 </div>
-                <h3 className="text-xl font-bold mb-2">{title}</h3>
-                <p className="text-muted-foreground">{description}</p>
+                <h3 className="text-lg sm:text-xl font-bold mb-1.5 sm:mb-2">{title}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{description}</p>
             </div>
         </div>
     );
 }
 
-// Component: Feature Card
+// Component: Feature Card - Mobile optimized
 function FeatureCard({ icon: Icon, title, description, color, bgColor }: { icon: any, title: string, description: string, color: string, bgColor: string }) {
     return (
-        <div className="p-6 rounded-2xl bg-card border border-border shadow-soft hover:shadow-xl transition-all hover:-translate-y-1 group">
-            <div className={cn("mb-4 inline-flex p-3 rounded-xl", bgColor)}>
-                <Icon className={cn("h-6 w-6", color)} />
+        <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-card border border-border shadow-soft hover:shadow-xl transition-all hover:-translate-y-0.5 sm:hover:-translate-y-1 group touch-target">
+            <div className={cn("mb-3 sm:mb-4 inline-flex p-2.5 sm:p-3 rounded-lg sm:rounded-xl", bgColor)}>
+                <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", color)} />
             </div>
-            <h3 className="text-lg font-bold mb-2 group-hover:text-green-500 transition-colors">{title}</h3>
+            <h3 className="text-base sm:text-lg font-bold mb-1.5 sm:mb-2 group-hover:text-green-500 transition-colors">{title}</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
         </div>
     );
 }
 
-// Component: Stat Item
+// Component: Stat Item - Mobile optimized
 function StatItem({ value, label, icon }: { value: string, label: string, icon: React.ReactNode }) {
     return (
-        <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2 mb-1">
+        <div className="flex flex-col items-center p-2 sm:p-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
                 <span className="text-green-500">{icon}</span>
-                <span className="text-3xl md:text-4xl font-black text-foreground">{value}</span>
+                <span className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground">{value}</span>
             </div>
-            <span className="text-sm text-muted-foreground">{label}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground text-center">{label}</span>
         </div>
     );
 }
