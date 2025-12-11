@@ -15,35 +15,26 @@ async function verifyAdmin(authHeader: string | null, supabaseUrl: string, servi
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user: jwtUser }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-    if (authError || !jwtUser) {
+    if (authError || !user) {
+        console.error('[AdminReports] Auth check failed:', authError);
         throw new Error('Authentication failed');
     }
 
-    let dbUser;
-    try {
-        const { data, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
-        if (dbError) throw dbError;
-        dbUser = data.user;
-    } catch (err) {
-        console.warn('getUserById failed, falling back to JWT:', err);
-        dbUser = jwtUser;
-    }
+    console.log('[AdminReports] Authenticated user:', user.id, user.email);
 
-    if (!dbUser) {
-        throw new Error('User not found');
-    }
+    // Check if user is admin from JWT claims
+    const isAdmin = user.user_metadata?.is_admin === true ||
+        user.app_metadata?.is_admin === true;
 
-    // Check both user_metadata and app_metadata for admin flag
-    const isAdmin = dbUser.user_metadata?.is_admin === true ||
-        dbUser.app_metadata?.is_admin === true;
+    console.log('[AdminReports] Is admin:', isAdmin);
 
     if (!isAdmin) {
         throw new Error('Forbidden: Admin access required');
     }
 
-    return { user: dbUser, supabase };
+    return { user, supabase };
 }
 
 // Log admin action
