@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { AIChatWidget } from '@/components/AIChatWidget';
-import { MobileNav } from '@/components/layout/MobileNav';
 import {
   LayoutDashboard,
   Receipt,
@@ -22,7 +21,8 @@ import {
   User,
   Headphones,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  MoreVertical
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -222,14 +222,20 @@ export function AppLayout({ children }: AppLayoutProps) {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 pt-14 lg:pt-0 w-full pb-mobile-nav lg:pb-0">
+      <main className="flex-1 pt-14 lg:pt-0 w-full pb-8 lg:pb-0">
         <div className="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-6xl mx-auto">
           {children}
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <MobileNav onMenuClick={() => setMobileMenuOpen(true)} />
+      {/* Mobile Floating Action Button (Menu) */}
+      <button
+        className="fab show-mobile shadow-lg hover:shadow-xl active:scale-95 transition-all"
+        onClick={() => setMobileMenuOpen(true)}
+        aria-label="Abrir menu"
+      >
+        <MoreVertical className="h-6 w-6" />
+      </button>
 
       {/* AI Chat Widget */}
       <AIChatWidget />
