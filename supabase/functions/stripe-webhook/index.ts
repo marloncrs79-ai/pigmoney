@@ -24,6 +24,8 @@ serve(async (req) => {
         return new Response(`Webhook Error: ${err.message}`, { status: 400 });
     }
 
+    console.log('Received Stripe Event:', event.type);
+
     const supabaseClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SERVICE_ROLE_KEY') ?? ''
@@ -35,20 +37,30 @@ serve(async (req) => {
         const coupleId = session.metadata?.couple_id;
         const planType = session.metadata?.plan_type; // 'pro' or 'annual'
 
+        console.log('Checkout Session Completed. Metadata:', { userId, coupleId, planType });
+
         if (coupleId && planType) {
             // Update user plan in Supabase
-            const { error } = await supabaseClient
+            console.log(`Updating plan for couple ${coupleId} to ${planType}`);
+
+            const { data, error } = await supabaseClient
                 .from('couples')
                 .update({
                     plan: planType,
                     plan_updated_at: new Date().toISOString()
                 })
-                .eq('id', coupleId);
+                .eq('id', coupleId)
+                .select();
 
             if (error) {
                 console.error('Error updating couple plan:', error);
-                return new Response('Error updating couple plan', { status: 500 });
+                return new Response(`Error updating couple plan: ${error.message}`, { status: 500 });
             }
+
+            console.log('Update successful. Exiting data:', data);
+        } else {
+            console.warn('Missing metadata in checkout session:', { coupleId, planType });
+            return new Response('Missing metadata', { status: 400 });
         }
     }
 

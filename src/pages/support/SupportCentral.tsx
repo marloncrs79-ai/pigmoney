@@ -16,9 +16,7 @@ import {
 } from 'lucide-react';
 
 export default function SupportCentral() {
-    const handleEmailClick = () => {
-        window.location.href = 'mailto:contato@pigmoney.com.br';
-    };
+
 
     const handleWhatsAppClick = () => {
         const message = encodeURIComponent('Olá! Preciso de ajuda no PigMoney 🐷💚');
@@ -64,14 +62,9 @@ export default function SupportCentral() {
                                 <Clock className="h-3 w-3" />
                                 Seg a Sex — 08:00 às 17:00
                             </Badge>
-                            <Button
-                                onClick={handleEmailClick}
-                                className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg transition-all duration-200 hover:scale-[1.02]"
-                            >
-                                <Mail className="mr-2 h-5 w-5" />
-                                Falar por E-mail
-                                <ExternalLink className="ml-2 h-4 w-4" />
-                            </Button>
+                            <div className="w-full flex items-center justify-center p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium select-all border border-slate-200 dark:border-slate-700">
+                                contato@pigmoney.com.br
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

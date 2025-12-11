@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 export default function Checkout() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { user, plan } = useAuth();
+    const { user, plan, refreshCouple } = useAuth();
     const { toast } = useToast();
 
     const planId = searchParams.get('plan');
@@ -95,6 +95,21 @@ export default function Checkout() {
     };
 
     if (success) {
+        // Force refresh to ensure plan is updated
+        useEffect(() => {
+            refreshCouple();
+            // Retry after a small delay in case webhook is slightly slow
+            const timer = setTimeout(() => {
+                refreshCouple();
+            }, 2000);
+            return () => clearTimeout(timer);
+        }, []);
+
+        const handleGoToDashboard = async () => {
+            await refreshCouple(); // One last check
+            navigate('/dashboard');
+        };
+
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background animate-fade-in text-center">
                 <Confetti numberOfPieces={200} recycle={false} />
@@ -105,7 +120,7 @@ export default function Checkout() {
                 <p className="text-muted-foreground text-lg mb-8 max-w-md">
                     Sua assinatura está sendo ativada. Pode levar alguns instantes para o sistema atualizar.
                 </p>
-                <Button size="xl" onClick={() => navigate('/dashboard')} className="gap-2 shadow-xl hover:scale-105 transition-transform">
+                <Button size="xl" onClick={handleGoToDashboard} className="gap-2 shadow-xl hover:scale-105 transition-transform">
                     Ir para o Dashboard <Sparkles className="h-4 w-4" />
                 </Button>
             </div>

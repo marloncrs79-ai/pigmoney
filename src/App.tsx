@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { SetupCoupleDialog } from "@/components/SetupCoupleDialog";
 import { Loader2 } from "lucide-react";
 import { Suspense, lazy } from "react";
 
@@ -92,7 +91,6 @@ function PageLoading() {
 function AppRoutes() {
   return (
     <>
-      <SetupCoupleDialog />
       <Suspense fallback={<PageLoading />}>
         <Routes>
           <Route path="/" element={<Landing />} />
