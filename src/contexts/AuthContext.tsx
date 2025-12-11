@@ -14,6 +14,7 @@ interface AuthContextType {
   session: Session | null;
   couple: CoupleData | null;
   plan: PlanType;
+  planStartedAt: string | null;
   loading: boolean;
   coupleLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [couple, setCouple] = useState<CoupleData | null>(null);
   const [plan, setPlan] = useState<PlanType>('free');
+  const [planStartedAt, setPlanStartedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [coupleLoading, setCoupleLoading] = useState(true);
 
@@ -76,10 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('[AuthContext] Error fetching member data:', memberError);
         setCouple(null);
         setPlan('free');
+        setPlanStartedAt(null);
       } else if (memberData?.couple_id) {
         const { data: coupleData, error: coupleError } = await supabase
           .from('couples')
-          .select('id, name, plan')
+          .select('id, name, plan, plan_updated_at')
           .eq('id', memberData.couple_id)
           .single();
 
@@ -87,17 +90,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('[AuthContext] Error fetching couple data:', coupleError);
           setCouple(null);
           setPlan('free');
+          setPlanStartedAt(null);
         } else if (coupleData) {
           setCouple({ id: coupleData.id, name: coupleData.name });
           // Safe cast or check
           const dbPlan = coupleData.plan as PlanType;
           setPlan(dbPlan || 'free');
+          setPlanStartedAt((coupleData as any).plan_updated_at || null);
           lastFetchedUserId.current = userId;
         }
       } else {
         console.log('[AuthContext] No membership found for user');
         setCouple(null);
         setPlan('free');
+        setPlanStartedAt(null);
       }
     } catch (err) {
       console.error('[AuthContext] Unexpected error in fetchCouple:', err);
@@ -224,7 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, couple, plan, loading, coupleLoading, signIn, signUp, signOut, refreshCouple, createCoupleForUser, updatePlan }}>
+    <AuthContext.Provider value={{ user, session, couple, plan, planStartedAt, loading, coupleLoading, signIn, signUp, signOut, refreshCouple, createCoupleForUser, updatePlan }}>
       {children}
     </AuthContext.Provider>
   );

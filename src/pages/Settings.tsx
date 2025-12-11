@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Lock, UserCog, CreditCard, AlertCircle, Settings as SettingsIcon } from 'lucide-react';
+import { Loader2, Save, Lock, UserCog, CreditCard, AlertCircle, Settings as SettingsIcon, Calendar } from 'lucide-react';
 import { CancellationModal } from '@/components/CancellationModal';
+import { getRenewalDate, formatRenewalDate } from '@/lib/plan-utils';
 
 export default function Settings() {
-    const { couple, refreshCouple, plan, updatePlan } = useAuth(); // Assuming updatePlan is exposed in AuthContext based on previous edits
+    const { couple, refreshCouple, plan, planStartedAt, updatePlan } = useAuth();
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -149,6 +150,16 @@ export default function Settings() {
                                         ? 'Você está no plano gratuito. Faça upgrade para desbloquear todo o potencial.'
                                         : 'Aproveite todos os recursos premium do PIGMONEY.'}
                                 </p>
+                                {plan !== 'free' && getRenewalDate(plan, planStartedAt) && (
+                                    <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                                        <Calendar className="h-4 w-4" />
+                                        <span>
+                                            Renovação em: <strong className="text-foreground">
+                                                {formatRenewalDate(getRenewalDate(plan, planStartedAt))}
+                                            </strong>
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
