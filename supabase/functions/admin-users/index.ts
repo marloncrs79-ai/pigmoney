@@ -6,63 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Admin verification middleware
-async function verifyAdmin(authHeader: string | null, supabaseUrl: string, serviceKey: string) {
-  if (!authHeader) {
-    throw new Error('No authorization header');
-  }
-
-  // Create client with service role for admin operations
-  const supabase = createClient(supabaseUrl, serviceKey);
-
-  // Get user from auth header (verifies the token)
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-  if (authError || !user) {
-    console.error('Auth check failed:', authError);
-    throw new Error('Authentication failed');
-  }
-
-  console.log('[AdminUsers] Authenticated user:', user.id, user.email);
-
-  // Check if user is admin from JWT claims
-  const isAdmin = user.user_metadata?.is_admin === true ||
-    user.app_metadata?.is_admin === true;
-
-  console.log('[AdminUsers] Is admin:', isAdmin, 'user_metadata:', user.user_metadata, 'app_metadata:', user.app_metadata);
-
-  if (!isAdmin) {
-    throw new Error('Forbidden: Admin access required');
-  }
-
-  return { user, supabase };
-}
-
-// Log admin action (fire and forget - don't block main response)
-function logAction(
-  supabase: any,
-  adminUserId: string,
-  action: string,
-  targetUserId?: string,
-  metadata?: any
-) {
-  // Fire and forget - don't await
-  supabase.rpc('log_admin_action', {
-    p_admin_user_id: adminUserId,
-    p_action: action,
-    p_target_user_id: targetUserId || null,
-    p_metadata: metadata || {},
-    p_ip_address: null
-  }).then(() => {
-    console.log('[AdminUsers] Action logged:', action);
-  }).catch((error: any) => {
-    console.error('[AdminUsers] Failed to log action:', error?.message || error);
-  });
-}
-
 serve(async (req) => {
-  // Handle CORS
+  console.log('===== ADMIN-USERS v2 CALLED =====');
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -72,259 +18,91 @@ serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const authHeader = req.headers.get('Authorization');
 
-    // Verify admin
-    const { user: adminUser, supabase } = await verifyAdmin(authHeader, supabaseUrl, serviceKey);
+    console.log('[v2] Has auth header:', !!authHeader);
+    console.log('[v2] Has service key:', !!serviceKey);
 
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    // Create client with service role
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Verify the token
+    const token = authHeader.replace('Bearer ', '');
+    console.log('[v2] Token length:', token.length);
+
+    const { data: userData, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError) {
+      console.error('[v2] Auth error:', authError);
+      throw new Error('Authentication failed: ' + authError.message);
+    }
+
+    const user = userData.user;
+    if (!user) {
+      throw new Error('No user in response');
+    }
+
+    console.log('[v2] User ID:', user.id);
+    console.log('[v2] User email:', user.email);
+    console.log('[v2] User app_metadata:', JSON.stringify(user.app_metadata));
+    console.log('[v2] User user_metadata:', JSON.stringify(user.user_metadata));
+
+    // Check admin
+    const isAdmin = user.user_metadata?.is_admin === true ||
+      user.app_metadata?.is_admin === true;
+
+    console.log('[v2] Is admin:', isAdmin);
+
+    if (!isAdmin) {
+      throw new Error('Forbidden: Admin access required. app_metadata: ' + JSON.stringify(user.app_metadata));
+    }
+
+    // Parse URL
     const url = new URL(req.url);
-    // URL format: /functions/v1/admin-users or /functions/v1/admin-users/:id
-    // We need to extract just the part after "admin-users"
-    const fullPath = url.pathname;
-    const functionPath = fullPath.replace(/^\/functions\/v1\/admin-users\/?/, '');
-    const pathParts = functionPath.split('/').filter(Boolean);
+    console.log('[v2] Full URL:', req.url);
+    console.log('[v2] Pathname:', url.pathname);
 
-    console.log('[AdminUsers] Path:', fullPath, 'Extracted parts:', pathParts);
+    // Try to list users
+    console.log('[v2] Calling listUsers...');
+    const { data: listData, error: listError } = await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 20,
+    });
 
-    // GET /admin-users - List users with filters
-    if (req.method === 'GET' && pathParts.length === 0) {
-      const page = parseInt(url.searchParams.get('page') || '1');
-      const limit = parseInt(url.searchParams.get('limit') || '20');
-      const search = url.searchParams.get('search') || '';
-      const provider = url.searchParams.get('provider') || '';
-      const verified = url.searchParams.get('verified') || '';
-      const sortBy = url.searchParams.get('sortBy') || 'created_at';
-      const sortOrder = url.searchParams.get('sortOrder') || 'desc';
-
-      const offset = (page - 1) * limit;
-
-      // Build query
-      console.log(`[AdminUsers] Fetching users page=${page} limit=${limit} search="${search}" provider="${provider}" verified="${verified}"`);
-
-      // Note: listUsers only returns a page of users, not all users, so client-side filtering below 
-      // is only filtering the *current page* of results, which is a bug if searching globally.
-      // But for now let's just debug why it's empty.
-      const { data, error } = await supabase.auth.admin.listUsers({
-        page,
-        perPage: limit,
-      });
-
-      if (error) {
-        console.error('[AdminUsers] listUsers error:', error);
-        throw error;
-      }
-
-      console.log(`[AdminUsers] Raw users fetched: ${data.users.length}`);
-
-      // Filter results (auth.admin.listUsers doesn't support filters)
-      let users = data.users;
-
-      if (search) {
-        users = users.filter((u: any) =>
-          u.email?.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-
-      if (provider) {
-        users = users.filter((u: any) =>
-          u.app_metadata?.provider === provider
-        );
-      }
-
-      if (verified !== '') {
-        const isVerified = verified === 'true';
-        users = users.filter((u: any) =>
-          (u.email_confirmed_at !== null) === isVerified
-        );
-      }
-
-      console.log(`[AdminUsers] Users after filtering: ${users.length}`);
-
-      // Log action disabled for debugging
-      // logAction(supabase, adminUser.id, 'list_users', undefined, {
-      //   filters: { search, provider, verified },
-      //   page,
-      //   limit,
-      //   result_count: users.length
-      // });
-
-
-      // Try to get a real total count if possible (requires a separate query generally, or we just rely on data.total if it exists in future versions)
-      // For now, let's just return what we have.
-      // NOTE: data.total is often strictly the total on the current page or undefined in some versions.
-      // If we need total count of ALL users for pagination, we usually need to trust the `total` from metadata or do a separate select count(*) from users view if exposed.
-
-      const total = (data as any).total ?? 0; // It might be on data.total in some versions
-
-      return new Response(
-        JSON.stringify({
-          users: users.map((u: any) => ({
-            id: u.id,
-            email: u.email,
-            created_at: u.created_at,
-            last_sign_in_at: u.last_sign_in_at,
-            email_confirmed_at: u.email_confirmed_at,
-            provider: u.app_metadata?.provider || 'email',
-            is_admin: u.user_metadata?.is_admin || u.app_metadata?.is_admin || false,
-          })),
-          total: total || data.users.length, // Fallback
-          page,
-          limit,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (listError) {
+      console.error('[v2] listUsers error:', listError);
+      throw new Error('listUsers failed: ' + listError.message);
     }
 
-    // GET /admin-users/:id - Get user details
-    if (req.method === 'GET' && pathParts.length === 1) {
-      const userId = pathParts[0];
+    console.log('[v2] Users count:', listData.users?.length || 0);
 
-      const { data, error } = await supabase.auth.admin.getUserById(userId);
+    const users = listData.users.map((u: any) => ({
+      id: u.id,
+      email: u.email,
+      created_at: u.created_at,
+      last_sign_in_at: u.last_sign_in_at,
+      email_confirmed_at: u.email_confirmed_at,
+      provider: u.app_metadata?.provider || 'email',
+      is_admin: u.user_metadata?.is_admin || u.app_metadata?.is_admin || false,
+    }));
 
-      if (error) throw error;
+    console.log('[v2] Returning', users.length, 'users');
 
-      // DISABLED: logAction(supabase, adminUser.id, 'view_user_details', userId);
+    return new Response(
+      JSON.stringify({
+        users,
+        total: listData.users.length,
+        page: 1,
+        limit: 20,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
-      return new Response(
-        JSON.stringify({
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            created_at: data.user.created_at,
-            updated_at: data.user.updated_at,
-            last_sign_in_at: data.user.last_sign_in_at,
-            email_confirmed_at: data.user.email_confirmed_at,
-            phone: data.user.phone,
-            phone_confirmed_at: data.user.phone_confirmed_at,
-            provider: data.user.app_metadata?.provider || 'email',
-            providers: data.user.app_metadata?.providers || [],
-            user_metadata: data.user.user_metadata,
-            app_metadata: data.user.app_metadata,
-            is_admin: data.user.user_metadata?.is_admin || data.user.app_metadata?.is_admin || false,
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // POST /admin-users/:id/actions - Admin actions (reset password, block, delete, etc)
-    if (req.method === 'POST' && pathParts.length === 2 && pathParts[1] === 'actions') {
-      const userId = pathParts[0];
-      const { action, ...params } = await req.json();
-
-      switch (action) {
-        case 'reset_password': {
-          // Generate password reset link
-          const { data, error } = await supabase.auth.admin.generateLink({
-            type: 'recovery',
-            email: params.email,
-          });
-
-          if (error) throw error;
-
-          // DISABLED: logAction(supabase, adminUser.id, 'reset_password', userId, { email: params.email });
-
-          return new Response(
-            JSON.stringify({ success: true, reset_link: data.properties.action_link }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        case 'verify_email': {
-          const { error } = await supabase.auth.admin.updateUserById(userId, {
-            email_confirm: true,
-          });
-
-          if (error) throw error;
-
-          // DISABLED: logAction(supabase, adminUser.id, 'verify_email', userId);
-
-          return new Response(
-            JSON.stringify({ success: true }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        case 'block': {
-          const { error } = await supabase.auth.admin.updateUserById(userId, {
-            ban_duration: '876000h', // 100 years (permanent)
-          });
-
-          if (error) throw error;
-
-          // DISABLED: logAction(supabase, adminUser.id, 'block_user', userId);
-
-          return new Response(
-            JSON.stringify({ success: true }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        case 'unblock': {
-          const { error } = await supabase.auth.admin.updateUserById(userId, {
-            ban_duration: 'none',
-          });
-
-          if (error) throw error;
-
-          // DISABLED: logAction(supabase, adminUser.id, 'unblock_user', userId);
-
-          return new Response(
-            JSON.stringify({ success: true }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        case 'delete': {
-          const { error } = await supabase.auth.admin.deleteUser(userId);
-
-          if (error) throw error;
-
-          // DISABLED: logAction(supabase, adminUser.id, 'delete_user', userId);
-
-          return new Response(
-            JSON.stringify({ success: true }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        case 'make_admin': {
-          const { error } = await supabase.auth.admin.updateUserById(userId, {
-            user_metadata: { is_admin: true },
-          });
-
-          if (error) throw error;
-
-          // DISABLED: logAction(supabase, adminUser.id, 'make_admin', userId);
-
-          return new Response(
-            JSON.stringify({ success: true }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        case 'remove_admin': {
-          const { error } = await supabase.auth.admin.updateUserById(userId, {
-            user_metadata: { is_admin: false },
-          });
-
-          if (error) throw error;
-
-          // DISABLED: logAction(supabase, adminUser.id, 'remove_admin', userId);
-
-          return new Response(
-            JSON.stringify({ success: true }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        default:
-          throw new Error(`Unknown action: ${action}`);
-      }
-    }
-
-    throw new Error('Not found');
-
-  } catch (error) {
-    console.error('Admin Users Error:', error);
+  } catch (error: any) {
+    console.error('[v2] ERROR:', error.message);
+    console.error('[v2] Stack:', error.stack);
 
     const status = error.message.includes('Forbidden') ? 403 :
       error.message.includes('Authentication') ? 401 : 400;
