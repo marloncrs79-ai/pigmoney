@@ -17,43 +17,26 @@ async function verifyAdmin(authHeader: string | null, supabaseUrl: string, servi
 
   // Get user from auth header (verifies the token)
   const token = authHeader.replace('Bearer ', '');
-  const { data: { user: jwtUser }, error: authError } = await supabase.auth.getUser(token);
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-  if (authError || !jwtUser) {
+  if (authError || !user) {
     console.error('Auth check failed:', authError);
     throw new Error('Authentication failed');
   }
 
-  console.log('JWT User ID:', jwtUser.id);
+  console.log('[AdminUsers] Authenticated user:', user.id, user.email);
 
-  // Fetch fresh user data from database to ensure metadata is up-to-date
-  // We use try-catch to identify if this specific call is failing
-  let dbUser;
-  try {
-    const { data, error: dbError } = await supabase.auth.admin.getUserById(jwtUser.id);
-    if (dbError) throw dbError;
-    dbUser = data.user;
-  } catch (err) {
-    console.error('getUserById failed for ID:', jwtUser.id, err);
-    // Fallback to JWT user if DB fetch fails, but warn
-    // This might happen if the ID format is somehow unexpected, though it shouldn't be for Supabase
-    console.warn('Falling back to JWT user data due to fetch error');
-    dbUser = jwtUser;
-  }
+  // Check if user is admin from JWT claims
+  const isAdmin = user.user_metadata?.is_admin === true ||
+    user.app_metadata?.is_admin === true;
 
-  if (!dbUser) {
-    throw new Error('User not found');
-  }
-
-  // Check if user is admin (check raw_user_meta_data)
-  const isAdmin = dbUser.user_metadata?.is_admin === true ||
-    dbUser.app_metadata?.is_admin === true;
+  console.log('[AdminUsers] Is admin:', isAdmin, 'user_metadata:', user.user_metadata, 'app_metadata:', user.app_metadata);
 
   if (!isAdmin) {
     throw new Error('Forbidden: Admin access required');
   }
 
-  return { user: dbUser, supabase };
+  return { user, supabase };
 }
 
 // Log admin action (fire and forget - don't block main response)
