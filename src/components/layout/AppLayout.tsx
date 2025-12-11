@@ -208,8 +208,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <span className="font-display font-extrabold text-lg tracking-tight">PIGMONEY</span>
         </Link>
 
-        {/* Settings quick access on mobile header */}
-        <div className="ml-auto flex items-center gap-2">
+        {/* Settings and Logout quick access on mobile header */}
+        <div className="ml-auto flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
@@ -217,6 +217,14 @@ export function AppLayout({ children }: AppLayoutProps) {
             onClick={() => navigate('/settings')}
           >
             <Settings className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl touch-target text-muted-foreground hover:text-destructive"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </header>
