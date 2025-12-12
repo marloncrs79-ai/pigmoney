@@ -31,6 +31,45 @@ serve(async (req) => {
         Deno.env.get('SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Log ALL events received for debugging
+    console.log('=== STRIPE WEBHOOK EVENT ===');
+    console.log('Event type:', event.type);
+    console.log('Event ID:', event.id);
+
+    // Helper function to update couple plan
+    async function updateCouplePlan(coupleId: string, planType: string) {
+        console.log('Updating plan for couple:', coupleId, 'to:', planType);
+        const { error } = await supabaseClient
+            .from('couples')
+            .update({
+                plan: planType,
+                plan_updated_at: new Date().toISOString()
+            })
+            .eq('id', coupleId);
+
+        if (error) {
+            console.error('Error updating plan:', error);
+            return false;
+        }
+        console.log('Plan updated successfully!');
+        return true;
+    }
+
+    // Helper to find couple_id from user_id
+    async function findCoupleId(userId: string): Promise<string | null> {
+        const { data, error } = await supabaseClient
+            .from('couple_members')
+            .select('couple_id')
+            .eq('user_id', userId)
+            .limit(1);
+
+        if (error) {
+            console.error('Error looking up couple:', error);
+            return null;
+        }
+        return data?.[0]?.couple_id || null;
+    }
+
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         let coupleId = session.metadata?.couple_id;
@@ -46,12 +85,12 @@ serve(async (req) => {
                 .from('couple_members')
                 .select('couple_id')
                 .eq('user_id', userId)
-                .maybeSingle();
+                .limit(1);
 
             if (memberError) {
                 console.error('Error looking up couple:', memberError);
-            } else if (memberData?.couple_id) {
-                coupleId = memberData.couple_id;
+            } else if (memberData?.[0]?.couple_id) {
+                coupleId = memberData[0].couple_id;
                 console.log('Found couple_id:', coupleId);
             }
         }

@@ -42,6 +42,24 @@ export default function Checkout() {
         }
     }, [canceled, navigate, toast]);
 
+    // Handle success - refresh plan data
+    useEffect(() => {
+        if (success) {
+            console.log('[Checkout] Payment success detected, refreshing plan...');
+            // Immediate refresh
+            refreshCouple();
+
+            // Retry multiple times to catch webhook delay
+            const timers = [
+                setTimeout(() => { console.log('[Checkout] Retry 1...'); refreshCouple(); }, 1500),
+                setTimeout(() => { console.log('[Checkout] Retry 2...'); refreshCouple(); }, 3000),
+                setTimeout(() => { console.log('[Checkout] Retry 3...'); refreshCouple(); }, 5000),
+            ];
+
+            return () => timers.forEach(t => clearTimeout(t));
+        }
+    }, [success, refreshCouple]);
+
     const planDetails = {
         pro: {
             title: 'Pig Pro Mensal',
@@ -95,16 +113,6 @@ export default function Checkout() {
     };
 
     if (success) {
-        // Force refresh to ensure plan is updated
-        useEffect(() => {
-            refreshCouple();
-            // Retry after a small delay in case webhook is slightly slow
-            const timer = setTimeout(() => {
-                refreshCouple();
-            }, 2000);
-            return () => clearTimeout(timer);
-        }, []);
-
         const handleGoToDashboard = async () => {
             await refreshCouple(); // One last check
             navigate('/dashboard');
