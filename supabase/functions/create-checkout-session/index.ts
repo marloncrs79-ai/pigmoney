@@ -46,14 +46,41 @@ serve(async (req) => {
         }
 
         // Fetch couple_id for the user using Admin Client
+        let coupleId: string | null = null;
         const { data: memberData, error: memberError } = await supabaseAdmin
             .from('couple_members')
             .select('couple_id')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
 
-        if (memberError || !memberData) {
-            throw new Error('User does not belong to a couple');
+        if (memberData?.couple_id) {
+            coupleId = memberData.couple_id;
+        } else {
+            // User doesn't have a couple yet - create one automatically
+            console.log('User has no couple, creating one...');
+
+            // Create a new couple for the user
+            const { data: newCouple, error: coupleCreateError } = await supabaseAdmin
+                .from('couples')
+                .insert({ name: user.email?.split('@')[0] || 'Minha Conta', plan: 'free' })
+                .select('id')
+                .single();
+
+            if (coupleCreateError) {
+                console.error('Error creating couple:', coupleCreateError);
+                // Proceed without couple_id - webhook will handle association
+            } else if (newCouple) {
+                // Link user to the new couple
+                const { error: memberCreateError } = await supabaseAdmin
+                    .from('couple_members')
+                    .insert({ couple_id: newCouple.id, user_id: user.id, role: 'owner' });
+
+                if (memberCreateError) {
+                    console.error('Error creating member:', memberCreateError);
+                } else {
+                    coupleId = newCouple.id;
+                }
+            }
         }
 
         // Define Price IDs (You should replace these with your actual Stripe Price IDs)
@@ -81,7 +108,7 @@ serve(async (req) => {
             customer_email: user.email,
             metadata: {
                 user_id: user.id,
-                couple_id: memberData.couple_id,
+                couple_id: coupleId || '',
                 plan_type: planType
             },
         });
