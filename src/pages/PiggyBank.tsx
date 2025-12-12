@@ -18,7 +18,7 @@ export default function PiggyBank() {
   const navigate = useNavigate();
   const { data: piggyBanks = [], isLoading } = usePiggyBanks();
   const createPiggyBank = useCreatePiggyBank();
-  
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -139,10 +139,10 @@ export default function PiggyBank() {
           <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {piggyBanks.map((pb) => {
               const progress = pb.goal_amount ? (Number(pb.current_balance) / Number(pb.goal_amount)) * 100 : null;
-              
+
               return (
-                <Card 
-                  key={pb.id} 
+                <Card
+                  key={pb.id}
                   className="cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98]"
                   onClick={() => navigate(`/piggy-bank/${pb.id}`)}
                 >
@@ -162,7 +162,7 @@ export default function PiggyBank() {
                           </p>
                         )}
                       </div>
-                      
+
                       {progress !== null && (
                         <div className="space-y-1">
                           <Progress value={Math.min(progress, 100)} className="h-2.5 sm:h-2" />
