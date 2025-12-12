@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#58CC02">
+  <title>PIGMONEY - Sem Conexão</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 400px;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 32px;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #58CC02 0%, #79E200 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    p {
+      font-size: 16px;
+      color: #a0a0a0;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #ff6b6b;
+      margin-bottom: 24px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #ff6b6b;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .retry-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #58CC02 0%, #79E200 100%);
+      color: #000;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .retry-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 20px rgba(88, 204, 2, 0.4);
+    }
+    
+    .retry-btn:active {
+      transform: scale(0.98);
+    }
+    
+    .footer {
+      position: fixed;
+      bottom: 24px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <svg class="icon" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="60" cy="60" r="55" fill="url(#gradient)" opacity="0.15"/>
+      <circle cx="60" cy="60" r="45" fill="url(#gradient)" opacity="0.3"/>
+      <path d="M60 25C40.67 25 25 40.67 25 60C25 79.33 40.67 95 60 95C79.33 95 95 79.33 95 60C95 40.67 79.33 25 60 25ZM60 85C46.19 85 35 73.81 35 60C35 46.19 46.19 35 60 35C73.81 35 85 46.19 85 60C85 73.81 73.81 85 60 85Z" fill="url(#gradient)"/>
+      <path d="M60 45V60L72 66" stroke="url(#gradient)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="25" y1="95" x2="95" y2="25" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#58CC02"/>
+          <stop offset="100%" style="stop-color:#79E200"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    
+    <h1>Você está offline</h1>
+    
+    <div class="status">
+      <span class="status-dot"></span>
+      <span>Sem conexão com a internet</span>
+    </div>
+    
+    <p>
+      O PIGMONEY precisa de conexão com a internet para sincronizar seus dados financeiros. 
+      Verifique sua conexão e tente novamente.
+    </p>
+    
+    <button class="retry-btn" onclick="window.location.reload()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 4v6h-6"></path>
+        <path d="M1 20v-6h6"></path>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      Tentar Novamente
+    </button>
+  </div>
+  
+  <div class="footer">
+    PIGMONEY • Gestão Financeira Inteligente
+  </div>
+  
+  <script>
+    // Auto-retry when connection is restored
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

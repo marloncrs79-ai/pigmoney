@@ -1,20 +1,90 @@
 {
-  "name": "PIGMONEY",
+  "name": "PIGMONEY - Gestão Financeira",
   "short_name": "PIGMONEY",
-  "description": "Sistema de gestão financeira para casais",
-  "start_url": "/",
+  "description": "Sistema inteligente para organizar suas finanças pessoais. Controle receitas, despesas, cartões de crédito e cofrinhos.",
+  "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F5F7FA",
+  "background_color": "#0a0a0a",
   "theme_color": "#58CC02",
   "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["finance", "productivity"],
-  "lang": "pt-BR"
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Início",
+      "description": "Ver painel principal",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Adicionar Receita",
+      "short_name": "Receita",
+      "description": "Registrar nova receita",
+      "url": "/income",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Adicionar Despesa",
+      "short_name": "Despesa",
+      "description": "Registrar nova despesa",
+      "url": "/expenses",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

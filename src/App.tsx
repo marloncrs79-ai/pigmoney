@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Suspense, lazy } from "react";
+import { PWAUpdateNotification } from "@/components/PWAUpdateNotification";
 
 // Eager load critical pages
 import Landing from "./pages/Landing";
@@ -138,6 +139,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <PWAUpdateNotification />
           <AppRoutes />
         </TooltipProvider>
       </AuthProvider>

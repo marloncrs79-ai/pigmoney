@@ -48,13 +48,58 @@
   <!-- Preconnect to external resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+  <!-- Preconnect to Supabase -->
+  <link rel="preconnect" href="https://cghpuuqxndxndbttbzyp.supabase.co" />
+  <link rel="dns-prefetch" href="https://cghpuuqxndxndbttbzyp.supabase.co" />
+
+  <!-- Preload critical font (Inter) -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style"
+    onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  </noscript>
 
   <!-- Mobile App Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PIGMONEY" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PIGMONEY" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-TileColor" content="#58CC02" />
+  <meta name="msapplication-tap-highlight" content="no" />
+
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/favicon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="/favicon.png" />
+
+  <!-- iOS Splash Screens -->
+  <!-- iPhone X / XS / 11 Pro -->
+  <link rel="apple-touch-startup-image" href="/favicon.png"
+    media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+  <!-- iPhone XR / 11 -->
+  <link rel="apple-touch-startup-image" href="/favicon.png"
+    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+  <!-- iPhone XS Max / 11 Pro Max -->
+  <link rel="apple-touch-startup-image" href="/favicon.png"
+    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
+  <!-- iPhone 12/13/14 -->
+  <link rel="apple-touch-startup-image" href="/favicon.png"
+    media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+  <!-- iPhone 12/13/14 Pro Max -->
+  <link rel="apple-touch-startup-image" href="/favicon.png"
+    media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" />
+  <!-- iPhone 15/16 Pro -->
+  <link rel="apple-touch-startup-image" href="/favicon.png"
+    media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
+  <!-- iPhone 15/16 Pro Max -->
+  <link rel="apple-touch-startup-image" href="/favicon.png"
+    media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -86,7 +131,35 @@
     Pular para o conteúdo principal
   </a>
 
-  <div id="root"></div>
+  <div id="root">
+    <!-- Initial loading skeleton - displayed until React hydrates -->
+    <div id="initial-loader" style="
+      min-height: 100vh;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+    ">
+      <div style="
+        width: 64px;
+        height: 64px;
+        border: 4px solid #1a1a2e;
+        border-top-color: #58CC02;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      "></div>
+      <p style="color: #666; margin-top: 16px; font-size: 14px;">Carregando...</p>
+      <style>
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 
   <!-- Noscript fallback -->
