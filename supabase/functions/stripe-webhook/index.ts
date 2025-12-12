@@ -33,10 +33,31 @@ serve(async (req) => {
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
-        const coupleId = session.metadata?.couple_id;
+        let coupleId = session.metadata?.couple_id;
         const planType = session.metadata?.plan_type;
+        const userId = session.metadata?.user_id;
+
+        console.log('Webhook received:', { coupleId, planType, userId, sessionId: session.id });
+
+        // If couple_id is missing or empty, try to find via user_id
+        if ((!coupleId || coupleId === '') && userId) {
+            console.log('couple_id missing, looking up via user_id:', userId);
+            const { data: memberData, error: memberError } = await supabaseClient
+                .from('couple_members')
+                .select('couple_id')
+                .eq('user_id', userId)
+                .maybeSingle();
+
+            if (memberError) {
+                console.error('Error looking up couple:', memberError);
+            } else if (memberData?.couple_id) {
+                coupleId = memberData.couple_id;
+                console.log('Found couple_id:', coupleId);
+            }
+        }
 
         if (coupleId && planType) {
+            console.log('Updating plan for couple:', coupleId, 'to:', planType);
             const { error } = await supabaseClient
                 .from('couples')
                 .update({
@@ -49,8 +70,10 @@ serve(async (req) => {
                 console.error('Error updating plan:', error);
                 return new Response(`Error updating plan: ${error.message}`, { status: 500 });
             }
+            console.log('Plan updated successfully!');
         } else {
-            return new Response('Missing metadata', { status: 400 });
+            console.error('Missing required metadata:', { coupleId, planType, userId });
+            return new Response('Missing metadata: couple_id or plan_type', { status: 400 });
         }
     }
 
