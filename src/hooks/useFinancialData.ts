@@ -162,8 +162,24 @@ export function useCreateExpense() {
     mutationFn: async (expense: CreateExpenseWithCard) => {
       if (!couple?.id) throw new Error('No couple');
 
-      const { cardClosingDay, installments = 1, ...expenseData } = expense;
-      const insertData = { ...expenseData, couple_id: couple.id };
+      const { cardClosingDay, installments = 1 } = expense;
+
+      // Only include valid database columns - explicitly pick allowed fields
+      const insertData = {
+        couple_id: couple.id,
+        type: expense.type,
+        name: expense.name || '',
+        amount: expense.amount || 0,
+        due_day: expense.due_day || null,
+        category: expense.category || 'Outros',
+        is_active: expense.is_active ?? true,
+        notes: expense.notes || null,
+        date: expense.date || null,
+        payment_method: expense.payment_method || 'pix',
+        description: expense.description || null,
+        paid_with_card: expense.paid_with_card || false,
+        card_id: expense.card_id || null,
+      };
 
       // Create the expense
       const { data: createdExpense, error } = await supabase

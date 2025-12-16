@@ -56,14 +56,43 @@ export default function Expenses() {
   };
 
   const handleFormSubmit = async (data: any) => {
-    const { originalType, ...submissionData } = data;
+    const {
+      originalType,
+      finalAmount,
+      selectedCard,
+      is_installment,
+      installment_amount,
+      installments,
+    } = data;
 
-    // Transform data back to format expected by hooks if needed
-    // ExpenseForm already prepares simpler object, but let's ensure type
-    const payload = {
-      ...submissionData,
-      type: originalType
+    // Calculate amount properly
+    const amount = parseFloat(data.amount) || finalAmount || 0;
+
+    // Build payload with ONLY valid database columns
+    const payload: any = {
+      type: originalType,
+      name: data.name || data.description || '',
+      description: data.description || data.name || '',
+      amount: amount,
+      category: data.category || 'Outros',
+      is_active: data.is_active ?? true,
+      notes: data.notes || null,
+      date: data.date || new Date().toISOString().split('T')[0],
+      payment_method: data.paid_with_card ? 'credit_card' : (data.payment_method || 'pix'),
+      paid_with_card: data.paid_with_card || false,
+      card_id: data.paid_with_card ? data.card_id : null,
     };
+
+    // Add due_day for fixed expenses
+    if (originalType === 'fixed') {
+      payload.due_day = parseInt(data.due_day) || 1;
+    }
+
+    // Add card-related fields if paid with card (these are consumed by the hook, not sent to DB)
+    if (data.paid_with_card && selectedCard) {
+      payload.cardClosingDay = selectedCard.closing_day;
+      payload.installments = parseInt(installments) || 1;
+    }
 
     if (editingId) {
       await updateExpense.mutateAsync({ id: editingId, ...payload });
